@@ -2,7 +2,7 @@ import axios from 'axios';
 import { getStoredToken, clearStoredToken } from './auth';
 
 const api = axios.create({
-  baseURL: 'http://10.0.2.2:3000',
+  baseURL: 'https://vault-api-lyk2.onrender.com',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',

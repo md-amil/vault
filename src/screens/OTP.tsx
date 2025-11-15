@@ -1,7 +1,22 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, Alert, ActivityIndicator } from 'react-native';
+import { 
+  Keyboard, 
+  KeyboardAvoidingView, 
+  Platform, 
+  StyleSheet, 
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  View, 
+  Alert, 
+  ScrollView 
+} from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import GradientButton from '../components/GradientButton';
+import Spacer from '../components/Spacer';
 import { authAPI } from '../api/auth';
 import { useAuth } from '../contexts/AuthContext';
+import { globalStyles,colors } from '../style/global';
 
 type Params = {
   route: { params?: { phone?: string; countryCode?: string } };
@@ -13,12 +28,14 @@ export default function OTPScreen({ route, navigation }: Params) {
   const countryCode = route?.params?.countryCode ?? '';
   const { login } = useAuth();
 
-  const [code, setCode] = useState<string>('');
+  const [otp, setOtp] = useState<string[]>(['', '', '', '', '', '']);
   const [cooldown, setCooldown] = useState<number>(30);
   const [loading, setLoading] = useState<boolean>(false);
   const [resending, setResending] = useState<boolean>(false);
-  const inputRef = useRef<TextInput | null>(null);
+  
+  const inputRefs = useRef<(TextInput | null)[]>([]);
 
+  const code = otp.join('');
   const isValid = useMemo(() => /^\d{6}$/.test(code), [code]);
 
   useEffect(() => {
@@ -28,6 +45,30 @@ export default function OTPScreen({ route, navigation }: Params) {
     return () => clearInterval(t);
   }, []);
 
+ const handleOtpChange = (text: string, index: number) => {
+  // Make sure we're working with an array
+  if (!Array.isArray(otp)) {
+    console.error('OTP is not an array');
+    setOtp(['', '', '', '', '', '']);
+    return;
+  }
+
+  const newOtp = [...otp];
+  newOtp[index] = text;
+  setOtp(newOtp);
+
+  // Auto-focus next input
+  if (text && index < 5) {
+    inputRefs.current[index + 1]?.focus();
+  }
+};
+
+  const handleKeyPress = (e: any, index: number) => {
+    if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  };
+
   async function onVerify() {
     if (!isValid || loading) return;
     
@@ -35,11 +76,9 @@ export default function OTPScreen({ route, navigation }: Params) {
       setLoading(true);
       Keyboard.dismiss();
       
-      // Verify OTP with the API
       const response = await authAPI.verifyOTP(phone, code);
       
       if (response.access_token) {
-        // Successfully verified, update auth state and navigate to Home
         login();
         navigation.navigate('Home');
       } else {
@@ -78,107 +117,180 @@ export default function OTPScreen({ route, navigation }: Params) {
   }
 
   return (
-    <KeyboardAvoidingView behavior={Platform.select({ ios: 'padding', android: undefined })} style={{ flex: 1 }}>
-      <View style={styles.screen}>
-        <Text style={styles.title}>Enter OTP</Text>
-        <Text style={styles.subtitle}>
-          Code sent to {countryCode} {phone}
-        </Text>
-
-        <TextInput
-          ref={inputRef}
-          value={code}
-          onChangeText={(t) => setCode(t.replace(/[^0-9]/g, '').slice(0, 6))}
-          keyboardType="number-pad"
-          placeholder="••••••"
-          placeholderTextColor="#999"
-          style={styles.otpInput}
-          maxLength={6}
-          autoFocus
-        />
-
-        <TouchableOpacity 
-          style={[styles.primaryButton, (!isValid || loading) && styles.disabledButton]} 
-          disabled={!isValid || loading} 
-          onPress={onVerify}
+    <View style={styles.container}>
+      {/* Header */}
+    
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.primaryButtonText}>Verify</Text>
-          )}
-        </TouchableOpacity>
+          {/* Title */}
+          <Text style={globalStyles.title}>Verify OTP</Text>
+          <Text style={globalStyles.subtitle}>
+            Enter the OTP sent to your mobile number
+          </Text>
 
-        <TouchableOpacity 
-          disabled={cooldown > 0 || resending} 
-          onPress={onResend} 
-          style={styles.resendBtn}
-        >
-          {resending ? (
-            <ActivityIndicator color="#0a84ff" size="small" />
-          ) : (
-            <Text style={[styles.resendText, (cooldown > 0 || resending) && styles.resendDisabled]}>
-              Resend {cooldown > 0 ? `(${cooldown}s)` : ''}
-            </Text>
-          )}
-        </TouchableOpacity>
-      </View>
-    </KeyboardAvoidingView>
+          <Spacer height={70} />
+
+          {/* OTP Input Boxes */}
+          <View style={styles.otpContainer}>
+            {otp.map((digit, index) => (
+              <TextInput
+                key={index}
+                ref={(ref) => (inputRefs.current[index] = ref)}
+                value={digit}
+                onChangeText={(text) => handleOtpChange(text.replace(/[^0-9]/g, ''), index)}
+                onKeyPress={(e) => handleKeyPress(e, index)}
+                keyboardType="number-pad"
+                maxLength={1}
+                style={styles.otpBox}
+                textAlign="center"
+                autoFocus={index === 0}
+              />
+            ))}
+          </View>
+
+          <Spacer height={42} />
+
+          {/* Action Links */}
+          <View style={styles.actionRow}>
+            <TouchableOpacity onPress={() => navigation.goBack()}>
+              <Text style={styles.actionLink}>Change Number</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              disabled={cooldown > 0 || resending} 
+              onPress={onResend}
+            >
+              <Text style={[
+                styles.actionLink, 
+                (cooldown > 0 || resending) && styles.actionDisabled
+              ]}>
+                Resend OTP {cooldown > 0 ? `(${cooldown}s)` : ''}
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <Spacer height={40} />
+
+          {/* Verify Button */}
+          <GradientButton
+            title="Verify"
+            onPress={onVerify}
+            disabled={!isValid}
+            loading={loading}
+          />
+
+          <Spacer height={42} />
+
+          {/* Bottom Resend Text */}
+          <View style={styles.bottomTextRow}>
+            <Text style={styles.bottomText}>Didn't get the code? </Text>
+            <TouchableOpacity 
+              disabled={cooldown > 0 || resending} 
+              onPress={onResend}
+            >
+              <Text style={[
+                styles.bottomLink,
+                (cooldown > 0 || resending) && styles.actionDisabled
+              ]}>
+                Resend
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  header: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingTop: 32,
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  shareButton: {
+    padding: 8,
+  },
+  scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
-    gap: 16,
+    paddingTop: 32,
+    paddingBottom: 40,
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: '700',
+    color: '#000',
+    marginBottom: 8,
   },
   subtitle: {
+    fontSize: 14,
     color: '#666',
+    lineHeight: 20,
   },
-  otpInput: {
-    letterSpacing: 12,
-    textAlign: 'center',
-    fontSize: 24,
+  otpContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
+  otpBox: {
+    flex: 1,
+    height: 56,
     borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    width: '80%',
+    borderColor: '#E2E8F0',
+    borderRadius: 8,
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#000',
+    backgroundColor: '#fff',
   },
-  primaryButton: {
-    backgroundColor: '#0a84ff',
-    paddingVertical: 14,
-    borderRadius: 10,
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    width: '100%',
-    marginTop: 8,
   },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
+  actionLink: {
+    fontSize: 14,
+    color: '#6b5cdb',
     fontWeight: '600',
   },
-  disabledButton: {
-    opacity: 0.5,
-  },
-  resendBtn: {
-    marginTop: 8,
-  },
-  resendText: {
-    color: '#0a84ff',
-    fontWeight: '600',
-  },
-  resendDisabled: {
+  actionDisabled: {
     color: '#999',
   },
+  bottomTextRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  bottomText: {
+    fontSize: 14,
+    color: '#718096',
+  },
+  bottomLink: {
+    fontSize: 14,
+    color: colors.primary,
+    fontWeight: '600',
+  },
 });
-
-

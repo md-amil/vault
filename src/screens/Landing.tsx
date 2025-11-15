@@ -1,24 +1,51 @@
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import GradientButton from '../components/GradientButton';
+import OutLineButton from '../components/OutLineButton';
 
 export default function LandingScreen({ navigation }: { navigation: any }) {
   return (
     <View style={styles.screen}>
-      <Image
-        source={{ uri: 'https://via.placeholder.com/120x120?text=Logo' }}
-        style={styles.logo}
-        resizeMode="contain"
-      />
-      <Text style={styles.title}>Welcome to Vault</Text>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        <View style={styles.content}>
+          {/* App Logo */}
+          <View style={styles.logoContainer}>
+            <View style={styles.logoCircle}>
+              <MaterialCommunityIcons name="earth" size={40} color="#fff" />
+            </View>
+          </View>
 
-      <View style={styles.buttonGroup}>
-        <TouchableOpacity style={styles.primaryButton} onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.primaryButtonText}>Login</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.secondaryButton} onPress={() => navigation.navigate('Signup')}>
-          <Text style={styles.secondaryButtonText}>Sign up</Text>
-        </TouchableOpacity>
-      </View>
+          {/* Application Name */}
+          <Text style={styles.appName}>Welcome to Vault</Text>
+
+          {/* Main Icon with Circle Background */}
+          <View style={styles.mainIconContainer}>
+            <View style={styles.iconCircleBackground}>
+              <View style={styles.iconCircle}>
+                <MaterialCommunityIcons name="folder-text" size={60} color="#7c5cdb" />
+              </View>
+            </View>
+          </View>
+
+          {/* Description Text */}
+          <Text style={styles.description}>
+            Simple way to manage your{'\n'}documents
+          </Text>
+
+          {/* Buttons Container */}
+          <View style={styles.buttonGroup}>
+            <GradientButton 
+              title="Login" 
+              onPress={() => navigation.navigate('Login')} 
+            />
+            <OutLineButton 
+              title="Register" 
+              onPress={() => navigation.navigate('Signup')} 
+            />
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 }
@@ -26,49 +53,62 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: '#fff',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: 'center',
+  },
+  content: {
     alignItems: 'center',
-    paddingTop: 24,
     paddingHorizontal: 24,
-    gap: 16,
+    paddingVertical: 40,
   },
-  logo: {
-    width: 120,
-    height: 120,
-    marginBottom: 12,
+  logoContainer: {
+    marginBottom: 16,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginTop: 8,
+  logoCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 12,
+    backgroundColor: '#6b5cdb',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  appName: {
+    fontSize: 20,
+    color: '#333',
+    marginBottom: 50,
+    fontWeight: '600',
+  },
+  mainIconContainer: {
+    marginBottom: 40,
+  },
+  iconCircleBackground: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    backgroundColor: 'rgba(124, 92, 219, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconCircle: {
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: 'rgba(124, 92, 219, 0.15)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  description: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 50,
+    lineHeight: 24,
   },
   buttonGroup: {
     width: '100%',
-    gap: 12,
-    marginTop: 24,
-  },
-  primaryButton: {
-    backgroundColor: '#0a84ff',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    borderWidth: 1,
-    borderColor: '#0a84ff',
-    paddingVertical: 14,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    color: '#0a84ff',
-    fontSize: 16,
-    fontWeight: '600',
+    gap: 16,
   },
 });
-
-

@@ -1,20 +1,21 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Alert, BackHandler, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, BackHandler, FlatList, StyleSheet, Text,ActivityIndicator  , TouchableOpacity, View } from 'react-native';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { File, Folder } from '../types';
 import {
   Fab,
-  FolderRow,
-  GridTile,
   CreateFolderModal,
   FilePickerModal,
   FileOptionsModal,
-  EmptyFolder,
   HeaderOptionsMenu,
 } from '../components';
-import { foldersAPI } from '../api';
-import { filesAPI } from '../api';
+import { foldersAPI, filesAPI } from '../api';
+import { colors } from '../style/global';
+import LinearGradient from 'react-native-linear-gradient';
+import UploadOptionsModal from '../components/UploadOptionsModal';
+import AddDocumentModal from '../components/AddDocumentModal';
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const { logout } = useAuth();
@@ -28,19 +29,20 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     updatedAt: new Date().toISOString()
   });
   const [stack, setStack] = useState<Folder[]>([]);
-  const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid');
   const [loading, setLoading] = useState<boolean>(true);
   const [showActions, setShowActions] = useState<boolean>(false);
+  const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
+
   const [showFolderModal, setShowFolderModal] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
   const [showFilePicker, setShowFilePicker] = useState<boolean>(false);
   const [showFileOptions, setShowFileOptions] = useState<boolean>(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [showHeaderMenu, setShowHeaderMenu] = useState<boolean>(false);
-  const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
   const current = stack.length === 0 ? root : stack[stack.length - 1];
 
-  const displayEntries = useMemo(() => [...(current.children || []), ...(current.files || []),], [current.children, current.files])
+  const displayEntries = useMemo(() => [...(current.children || []), ...(current.files || [])], [current.children, current.files]);
 
   useEffect(() => {
     fetchFolderData();
@@ -50,7 +52,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     try {
       setLoading(true);
       const folders = await foldersAPI.getTree();
-      console.log(folders)
       const rootFolder: Folder = {
         id: 'root',
         name: 'Home',
@@ -60,6 +61,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
+      console.log(folders,'checking folder')
       setRoot(rootFolder);
     } catch (error) {
       console.error('Error fetching folder data:', error);
@@ -68,7 +70,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       setLoading(false);
     }
   };
-
 
   const handleLogout = async () => {
     setShowHeaderMenu(false);
@@ -89,29 +90,12 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     );
   };
 
-  const toggleDarkMode = () => {
-    setShowHeaderMenu(false);
-    setIsDarkMode(!isDarkMode);
-    // TODO: Implement dark mode theme switching
-    Alert.alert(
-      'Dark Mode',
-      `Dark mode ${!isDarkMode ? 'enabled' : 'disabled'}`,
-      [{ text: 'OK' }]
-    );
-  };
-
-  const toggleViewMode = () => {
-    setShowHeaderMenu(false);
-    setViewMode(viewMode === 'grid' ? 'list' : 'grid');
-  };
-
   const goUp = useCallback(() => {
     if (stack.length > 0) {
       setStack((s) => s.slice(0, s.length - 1));
     }
   }, [stack.length]);
 
-  // Handle back button press
   useEffect(() => {
     const backAction = () => {
       if (stack.length > 0) {
@@ -127,46 +111,29 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: current.name,
-      headerTitleStyle: {
-        color: '#007AFF',
-        fontSize: 18,
-        fontWeight: '600',
-      },
-      headerLeft: stack.length > 0 ? () => (
-        <TouchableOpacity onPress={goUp} style={styles.headerLeftBtn}>
-          <Text style={styles.backButton}>‹</Text>
-        </TouchableOpacity>
-      ) : undefined,
-      headerRight: () => (
-        <TouchableOpacity onPress={() => setShowHeaderMenu(true)} style={styles.headerRightBtn}>
-          <Text style={styles.optionsIcon}>⋮</Text>
-        </TouchableOpacity>
-      ),
+      headerShown: false,
     });
-  }, [navigation, current.name, handleLogout, stack.length, goUp]);
+  }, [navigation]);
 
   async function open(item: File | Folder) {
+    console.log(item,'checking item')
     if ('path' in item) {
       setSelectedFile(item as File);
       setShowFileOptions(true);
       return;
     }
     setLoading(true);
-    const files = await filesAPI.getByFolder(item.id)
-    console.log({ files })
-    setStack((s) => [...s, { ...item, files } as any])
+    const files = await filesAPI.getByFolder(item.id);
+    setStack((s) => [...s, { ...item, files } as any]);
     setLoading(false);
-    return;
   }
 
   const updateChild = (r: Folder, newFolder: Folder, key: 'children' | 'files' = 'children') => {
     return {
       ...r,
-      [key]: r[key] ?
-        [...r[key], newFolder] : [newFolder],
+      [key]: r[key] ? [...r[key], newFolder] : [newFolder],
     };
-  }
+  };
 
   async function createFolder() {
     const name = newFolderName.trim();
@@ -192,8 +159,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     }
   }
 
+  
+
   function pushPickedAssets(assets?: Asset[] | null) {
-    console.log({ assets })
     if (!assets || assets.length === 0) return;
     assets.forEach(async (a, idx) => {
       try {
@@ -205,7 +173,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           name: fileName,
           path: a.uri,
         });
-        
         formData.append('name', fileName);
         formData.append('folderId', current.id);
 
@@ -246,6 +213,41 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     }
   }
 
+  const getItemSubtitle = (item: File | Folder) => {
+    if ('path' in item) {
+      return 'File';
+    }
+    const folder = item as Folder;
+    const folderCount = folder.children?.length || 0;
+    const fileCount = folder.files?.length || 0;
+    
+    if (folderCount > 0 && fileCount > 0) {
+      return `${folderCount} Folder${folderCount > 1 ? 's' : ''}, ${fileCount} Document${fileCount > 1 ? 's' : ''}`;
+    } else if (folderCount > 0) {
+      return `${folderCount} Folder${folderCount > 1 ? 's' : ''}`;
+    } else {
+      return `${fileCount} Document${fileCount > 1 ? 's' : ''}`;
+    }
+  };
+
+const renderFolderCard = ({ item }: { item: File | Folder }) => (
+  <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
+    <LinearGradient
+      colors={[colors.primary, colors.secondary]}
+      start={{ x: 0, y: 1 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.folderIcon}
+    >
+      <MaterialCommunityIcons name="folder" size={26} color="#fff" />
+    </LinearGradient>
+    <View style={styles.folderInfo}>
+      <Text style={styles.folderName}>{item.name}</Text>
+      <Text style={styles.folderSubtitle}>{getItemSubtitle(item)}</Text>
+    </View>
+  </TouchableOpacity>
+);
+
+
   const fileOptions = [
     {
       icon: '📝',
@@ -282,16 +284,6 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   const headerMenuOptions = [
     {
-      icon: isDarkMode ? '☀️' : '🌙',
-      label: isDarkMode ? 'Light Mode' : 'Dark Mode',
-      onPress: toggleDarkMode,
-    },
-    {
-      icon: viewMode === 'grid' ? '🔍' : '🔍',
-      label: viewMode === 'grid' ? 'List View' : 'Grid View',
-      onPress: toggleViewMode,
-    },
-    {
       icon: '🚪',
       label: 'Logout',
       onPress: handleLogout,
@@ -299,38 +291,66 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     },
   ];
 
-  const numColumns = viewMode === 'grid' ? 2 : 1;
-
   return (
-    <View style={styles.screen}>
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>My File Vault</Text>
+        <TouchableOpacity onPress={() => setShowActions(true)} style={styles.addButton}>
+          <MaterialCommunityIcons name="plus" size={24} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+      {/* User Info */}
+      <View style={styles.userSection}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarText}>J</Text>
+        </View>
+        <Text style={styles.userName}>John Doe</Text>
+      </View>
+
+      {/* Folder List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+    <ActivityIndicator size="large" color="#6b5cdb" />
+    {/* <Text style={styles.loadingText}>Loading...</Text> */}
+  </View>
       ) : (
         <FlatList
           data={displayEntries}
-          key={viewMode}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => viewMode === 'grid' ? (
-            <GridTile item={item} onOpen={open} />
-          ) : (
-            <FolderRow item={item} onOpen={open} />
-          )}
-          ItemSeparatorComponent={viewMode === 'list' ? () => <View style={styles.separator} /> : undefined}
-          contentContainerStyle={displayEntries.length === 0 ? styles.emptyContainer : (viewMode === 'grid' ? styles.gridContent : undefined)}
-          ListEmptyComponent={<EmptyFolder />}
-          numColumns={numColumns}
-          columnWrapperStyle={viewMode === 'grid' ? styles.gridRow : undefined}
+          renderItem={renderFolderCard}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No folders or files yet</Text>
+            </View>
+          }
         />
       )}
 
-      <Fab
+      {/* FAB */}
+      {/* <TouchableOpacity 
+        style={styles.fab} 
+        onPress={() => setShowActions(true)}
+        activeOpacity={0.8}
+      >
+        <MaterialCommunityIcons name="plus" size={28} color="#fff" />
+      </TouchableOpacity> */}
+
+      {/* <Fab
         showActions={showActions}
         setShowFolderModal={setShowFolderModal}
         setShowFilePicker={setShowFilePicker}
         setShowActions={setShowActions}
-      />
+      /> */}
+
+      <Fab
+  showActions={showActions}
+  setShowUploadModal={setShowUploadModal}
+  setShowActions={setShowActions}
+/>
 
       <CreateFolderModal
         visible={showFolderModal}
@@ -347,7 +367,88 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         onGallery={addFromGallery}
       />
 
-      <FileOptionsModal
+<UploadOptionsModal
+  visible={showUploadModal}
+  onClose={() => setShowUploadModal(false)}
+  onCamera={addFromCamera}
+  onNewFile={() => {
+    setShowUploadModal(false);
+    setShowAddDocumentModal(true);
+  }}
+  onGallery={addFromGallery}
+  onICloud={() => {
+    setShowUploadModal(false);
+    Alert.alert('iCloud', 'iCloud integration coming soon');
+  }}
+  onGoogleCloud={() => {
+    setShowUploadModal(false);
+    Alert.alert('Google Cloud', 'Google Cloud integration coming soon');
+  }}
+/>
+
+{/* Add Document Modal */}
+<AddDocumentModal
+  visible={showAddDocumentModal}
+  onClose={() => setShowAddDocumentModal(false)}
+  folders={displayEntries.filter(item => !('path' in item))}
+  onSave={async (data) => {
+    try {
+      setLoading(true);
+      
+      // Check if folder exists or needs to be created
+      let folderId = data.folderId;
+      
+      // If folderId is "new" or doesn't exist, create the folder
+      if (!folderId || folderId === 'new') {
+        const folderName = data.folderName || 'New Folder';
+        const newFolder = await foldersAPI.create({
+          name: folderName,
+          parentId: current.id === 'root' ? undefined : current.id
+        });
+        
+        // Update local state
+        if (stack.length === 0) {
+          setRoot((r) => updateChild(r, newFolder));
+        } else {
+          setStack((s) => s.map((folder, index) => {
+            if (index !== s.length - 1) return folder;
+            return updateChild(folder, newFolder);
+          }));
+        }
+        
+        folderId = newFolder.id;
+      }
+      
+      // Now create/save the document/file with the correct folderId
+      const fileData = {
+        name: data.fileName,
+        folderId: folderId,
+        category: data.category,
+        remarks: data.remarks,
+      };
+      
+      // Save document via API
+      await filesAPI.create(fileData);
+      // or await filesAPI.upload(formData); depending on your API
+      
+      setShowAddDocumentModal(false);
+      Alert.alert('Success', 'Document saved successfully');
+      
+      // Optionally refresh the folder data
+      await fetchFolderData();
+    } catch (error: any) {
+      console.error('Save document error:', error);
+      Alert.alert(
+        'Error', 
+        error.response?.data?.message || 'Failed to save document details'
+      );
+    } finally {
+      setLoading(false);
+    }
+  }}
+/>
+
+      {/* <FileOptionsModal
         visible={showFileOptions}
         file={selectedFile}
         onClose={() => setShowFileOptions(false)}
@@ -358,80 +459,141 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         visible={showHeaderMenu}
         onClose={() => setShowHeaderMenu(false)}
         options={headerMenuOptions}
-      />
+      /> */}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: {
+  container: {
     flex: 1,
-    backgroundColor: '#f8fafc',
-    paddingTop: 12,
-    paddingHorizontal: 20,
+    backgroundColor: colors.background,
   },
-  link: {
-    color: '#3b82f6',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  headerLeftBtn: {
-    paddingHorizontal: 8,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: 'transparent',
-    width: 30,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerRightBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    // backgroundColor: 'rgba(59, 130, 246, 0.1)',
-    minWidth: 40,
-    alignItems: 'center',
-  },
-  optionsIcon: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: '#007AFF',
-    letterSpacing: -2,
-  },
-  backButton: {
-    color: '#007AFF',
-    fontWeight: '400',
-    fontSize: 40,
-    textAlign: 'center',
-    lineHeight: 28,
-  },
-  separator: {
-    height: 0,
-  },
-  emptyContainer: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 40,
-  },
-  gridContent: {
-    paddingBottom: 20,
-    paddingTop: 8,
-  },
-  gridRow: {
+  header: {
+     paddingTop:40,
+    flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingHorizontal: 4,
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+  },
+  headerTitle: {
+   
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#1a1a1a',
+  },
+  addButton: {
+    padding: 4,
+  },
+  userSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 16,
+    // backgroundColor: '#fff',
+    // borderBottomWidth: 8,
+    borderBottomColor: '#f5f5f5',
+  },
+  avatar: {
+    width: 42,
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#e8e4f8',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  avatarText: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: colors.secondary,
+  },
+  userName: {
+    fontSize: 16,
+    color: colors.title,
+    fontWeight: '400',
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 100,
+  },
+  folderCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 8,
+    marginBottom: 12,
+  
+ 
+  },
+  folderIcon: {
+    width: 46,
+    height: 46,
+    /* Vector */
+
+    borderRadius: 9,
+  
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  folderInfo: {
+    flex: 1,
+  },
+  folderName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: -2,
+  },
+  folderSubtitle: {
+    fontSize: 13,
+    color: colors.primary,
+    fontWeight: '400',
+
   },
   loadingContainer: {
     flex: 1,
-    justifyContent: 'center',
+    // justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#f8fafc',
+    marginTop:200
   },
   loadingText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#007AFF',
+    fontSize: 16,
+    color: '#6b5cdb',
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingTop: 100,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#ff4d8f',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#ff4d8f',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
 });
