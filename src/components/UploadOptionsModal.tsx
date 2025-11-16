@@ -14,8 +14,9 @@ interface UploadOptionsModalProps {
   visible: boolean;
   onClose: () => void;
   onCamera: () => void;
-  onNewFile: () => void;
+  onNewFolder: () => void;
   onGallery: () => void;
+  onDocuments: () => void;
   onICloud: () => void;
   onGoogleCloud: () => void;
 }
@@ -28,8 +29,9 @@ export default function UploadOptionsModal({
   visible,
   onClose,
   onCamera,
-  onNewFile,
+  onNewFolder,
   onGallery,
+  onDocuments,
   onICloud,
   onGoogleCloud,
 }: UploadOptionsModalProps) {
@@ -76,13 +78,13 @@ export default function UploadOptionsModal({
               {/* New File */}
               <TouchableOpacity
                 style={styles.card}
-                onPress={onNewFile}
+                onPress={onNewFolder}
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
                   <MaterialCommunityIcons name="folder-plus" size={40} color="#6b5cdb" />
                 </View>
-                <Text style={styles.cardLabel}>New File</Text>
+                <Text style={styles.cardLabel}>New Folder</Text>
               </TouchableOpacity>
 
               {/* Gallery */}
@@ -95,6 +97,18 @@ export default function UploadOptionsModal({
                   <MaterialCommunityIcons name="image" size={40} color="#6b5cdb" />
                 </View>
                 <Text style={styles.cardLabel}>Gallery</Text>
+              </TouchableOpacity>
+
+              {/* Documents (PDF, Images, ZIP) */}
+              <TouchableOpacity
+                style={styles.card}
+                onPress={onDocuments}
+                activeOpacity={0.7}
+              >
+                <View style={styles.iconContainer}>
+                  <MaterialCommunityIcons name="file-document" size={40} color="#6b5cdb" />
+                </View>
+                <Text style={styles.cardLabel}>Documents</Text>
               </TouchableOpacity>
 
               {/* iCloud */}

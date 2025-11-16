@@ -70,7 +70,7 @@ export const useFileStore = create<Store>((set, get) => ({
 
     addFile: async (file: Asset) => {
         try {
-            const fileName = file.fileName || file.uri?.split('/')?.pop() || `Image_${Date.now()}_${idx}.jpg`;
+            const fileName = file.fileName || file.uri?.split('/')?.pop() || `Image_${Date.now()}.jpg`;
             const formData = new FormData();
             formData.append('file', {
                 uri: file.uri,

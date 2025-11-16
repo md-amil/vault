@@ -1,9 +1,10 @@
 import React, { useCallback, useEffect, useLayoutEffect, useMemo, useState } from 'react';
-import { Alert, BackHandler, FlatList, StyleSheet, Text,ActivityIndicator  , TouchableOpacity, View } from 'react-native';
+import { Alert, BackHandler, FlatList, StyleSheet, Text, ActivityIndicator, TouchableOpacity, View } from 'react-native';
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { File, Folder } from '../types';
+
 import {
   Fab,
   CreateFolderModal,
@@ -32,7 +33,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [showActions, setShowActions] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
-const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
+  const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
 
   const [showFolderModal, setShowFolderModal] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
@@ -61,7 +62,7 @@ const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      console.log(folders,'checking folder')
+      console.log(folders, 'checking folder')
       setRoot(rootFolder);
     } catch (error) {
       console.error('Error fetching folder data:', error);
@@ -116,7 +117,7 @@ const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
   }, [navigation]);
 
   async function open(item: File | Folder) {
-    console.log(item,'checking item')
+    console.log(item, 'checking item')
     if ('path' in item) {
       setSelectedFile(item as File);
       setShowFileOptions(true);
@@ -159,7 +160,7 @@ const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
     }
   }
 
-  
+
 
   function pushPickedAssets(assets?: Asset[] | null) {
     if (!assets || assets.length === 0) return;
@@ -204,13 +205,29 @@ const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
 
   async function addFromGallery() {
     try {
-      const res = await launchImageLibrary({ mediaType: 'photo', selectionLimit: 0, quality: 0.8 });
+      const res = await launchImageLibrary({ 
+        mediaType: 'mixed', // Supports both photos and videos
+        selectionLimit: 0, 
+        quality: 0.8 
+      });
       if (res.didCancel) return;
       pushPickedAssets(res.assets);
     } finally {
       setShowFilePicker(false);
       setShowActions(false);
     }
+  }
+
+  async function addFromDocuments() {
+    // For now, show a message that document picking requires additional setup
+    Alert.alert(
+      'Documents Feature',
+      'To pick PDF and ZIP files, we recommend:\n\n1. Use the Gallery option for images\n2. For PDFs/ZIPs, you can:\n   - Take a photo of the document\n   - Or we can add a compatible document picker library',
+      [
+        { text: 'Use Gallery', onPress: () => addFromGallery() },
+        { text: 'Cancel', style: 'cancel' }
+      ]
+    );
   }
 
   const getItemSubtitle = (item: File | Folder) => {
@@ -220,7 +237,7 @@ const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
     const folder = item as Folder;
     const folderCount = folder.children?.length || 0;
     const fileCount = folder.files?.length || 0;
-    
+
     if (folderCount > 0 && fileCount > 0) {
       return `${folderCount} Folder${folderCount > 1 ? 's' : ''}, ${fileCount} Document${fileCount > 1 ? 's' : ''}`;
     } else if (folderCount > 0) {
@@ -230,22 +247,22 @@ const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
     }
   };
 
-const renderFolderCard = ({ item }: { item: File | Folder }) => (
-  <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
-    <LinearGradient
-      colors={[colors.primary, colors.secondary]}
-      start={{ x: 0, y: 1 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.folderIcon}
-    >
-      <MaterialCommunityIcons name="folder" size={26} color="#fff" />
-    </LinearGradient>
-    <View style={styles.folderInfo}>
-      <Text style={styles.folderName}>{item.name}</Text>
-      <Text style={styles.folderSubtitle}>{getItemSubtitle(item)}</Text>
-    </View>
-  </TouchableOpacity>
-);
+  const renderFolderCard = ({ item }: { item: File | Folder }) => (
+    <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
+      <LinearGradient
+        colors={[colors.primary, colors.secondary]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.folderIcon}
+      >
+        <MaterialCommunityIcons name="folder" size={26} color="#fff" />
+      </LinearGradient>
+      <View style={styles.folderInfo}>
+        <Text style={styles.folderName}>{item.name}</Text>
+        <Text style={styles.folderSubtitle}>{getItemSubtitle(item)}</Text>
+      </View>
+    </TouchableOpacity>
+  );
 
 
   const fileOptions = [
@@ -312,9 +329,9 @@ const renderFolderCard = ({ item }: { item: File | Folder }) => (
       {/* Folder List */}
       {loading ? (
         <View style={styles.loadingContainer}>
-    <ActivityIndicator size="large" color="#6b5cdb" />
-    {/* <Text style={styles.loadingText}>Loading...</Text> */}
-  </View>
+          <ActivityIndicator size="large" color="#6b5cdb" />
+          {/* <Text style={styles.loadingText}>Loading...</Text> */}
+        </View>
       ) : (
         <FlatList
           data={displayEntries}
@@ -347,10 +364,10 @@ const renderFolderCard = ({ item }: { item: File | Folder }) => (
       /> */}
 
       <Fab
-  showActions={showActions}
-  setShowUploadModal={setShowUploadModal}
-  setShowActions={setShowActions}
-/>
+        showActions={showActions}
+        setShowUploadModal={setShowUploadModal}
+        setShowActions={setShowActions}
+      />
 
       <CreateFolderModal
         visible={showFolderModal}
@@ -367,86 +384,87 @@ const renderFolderCard = ({ item }: { item: File | Folder }) => (
         onGallery={addFromGallery}
       />
 
-<UploadOptionsModal
-  visible={showUploadModal}
-  onClose={() => setShowUploadModal(false)}
-  onCamera={addFromCamera}
-  onNewFile={() => {
-    setShowUploadModal(false);
-    setShowAddDocumentModal(true);
-  }}
-  onGallery={addFromGallery}
-  onICloud={() => {
-    setShowUploadModal(false);
-    Alert.alert('iCloud', 'iCloud integration coming soon');
-  }}
-  onGoogleCloud={() => {
-    setShowUploadModal(false);
-    Alert.alert('Google Cloud', 'Google Cloud integration coming soon');
-  }}
-/>
+      <UploadOptionsModal
+        visible={showUploadModal}
+        onClose={() => setShowUploadModal(false)}
+        onCamera={addFromCamera}
+        onNewFolder={() => {
+          setShowFolderModal(true)
+        }}
+        onGallery={addFromGallery}
+        onDocuments={addFromDocuments}
+        onICloud={() => {
+          setShowUploadModal(false);
+          Alert.alert('iCloud', 'iCloud integration coming soon');
+        }}
+        onGoogleCloud={() => {
+          setShowUploadModal(false);
+          Alert.alert('Google Cloud', 'Google Cloud integration coming soon');
+        }}
+      />
 
-{/* Add Document Modal */}
-<AddDocumentModal
-  visible={showAddDocumentModal}
-  onClose={() => setShowAddDocumentModal(false)}
-  folders={displayEntries.filter(item => !('path' in item))}
-  onSave={async (data) => {
-    try {
-      setLoading(true);
-      
-      // Check if folder exists or needs to be created
-      let folderId = data.folderId;
-      
-      // If folderId is "new" or doesn't exist, create the folder
-      if (!folderId || folderId === 'new') {
-        const folderName = data.folderName || 'New Folder';
-        const newFolder = await foldersAPI.create({
-          name: folderName,
-          parentId: current.id === 'root' ? undefined : current.id
-        });
-        
-        // Update local state
-        if (stack.length === 0) {
-          setRoot((r) => updateChild(r, newFolder));
-        } else {
-          setStack((s) => s.map((folder, index) => {
-            if (index !== s.length - 1) return folder;
-            return updateChild(folder, newFolder);
-          }));
-        }
-        
-        folderId = newFolder.id;
-      }
-      
-      // Now create/save the document/file with the correct folderId
-      const fileData = {
-        name: data.fileName,
-        folderId: folderId,
-        category: data.category,
-        remarks: data.remarks,
-      };
-      
-      // Save document via API
-      await filesAPI.create(fileData);
-      // or await filesAPI.upload(formData); depending on your API
-      
-      setShowAddDocumentModal(false);
-      Alert.alert('Success', 'Document saved successfully');
-      
-      // Optionally refresh the folder data
-      await fetchFolderData();
-    } catch (error: any) {
-      console.error('Save document error:', error);
-      Alert.alert(
-        'Error', 
-        error.response?.data?.message || 'Failed to save document details'
-      );
-    } finally {
-      setLoading(false);
-    }
-  }}
-/>
+      {/* Add Document Modal */}
+      <AddDocumentModal
+        visible={showAddDocumentModal}
+        onClose={() => setShowAddDocumentModal(false)}
+        folders={displayEntries.filter(item => !('path' in item))}
+        onSave={async (data) => {
+          try {
+            setLoading(true);
+
+            // Check if folder exists or needs to be created
+            let folderId = data.folderId;
+
+            // If folderId is "new" or doesn't exist, create the folder
+            if (!folderId || folderId === 'new') {
+              const folderName = data.folderName || 'New Folder';
+              const newFolder = await foldersAPI.create({
+                name: folderName,
+                parentId: current.id === 'root' ? undefined : current.id
+              });
+
+              // Update local state
+              if (stack.length === 0) {
+                setRoot((r) => updateChild(r, newFolder));
+              } else {
+                setStack((s) => s.map((folder, index) => {
+                  if (index !== s.length - 1) return folder;
+                  return updateChild(folder, newFolder);
+                }));
+              }
+
+              folderId = newFolder.id;
+            }
+
+            // Now create/save the document/file with the correct folderId
+            const fileData = {
+              name: data.fileName,
+              folderId: folderId,
+              category: data.category,
+              remarks: data.remarks,
+              userId: 'user123', // TODO: Replace with actual user ID from context
+            };
+
+            // Save document via API
+            await filesAPI.create(fileData);
+            // or await filesAPI.upload(formData); depending on your API
+
+            setShowAddDocumentModal(false);
+            Alert.alert('Success', 'Document saved successfully');
+
+            // Optionally refresh the folder data
+            await fetchFolderData();
+          } catch (error: any) {
+            console.error('Save document error:', error);
+            Alert.alert(
+              'Error',
+              error.response?.data?.message || 'Failed to save document details'
+            );
+          } finally {
+            setLoading(false);
+          }
+        }}
+      />
 
       {/* <FileOptionsModal
         visible={showFileOptions}
@@ -470,7 +488,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-     paddingTop:40,
+    paddingTop: 40,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -479,7 +497,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   headerTitle: {
-   
+
     fontSize: 20,
     fontWeight: '600',
     color: '#1a1a1a',
@@ -527,8 +545,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 8,
     marginBottom: 12,
-  
- 
+
+
   },
   folderIcon: {
     width: 46,
@@ -536,7 +554,7 @@ const styles = StyleSheet.create({
     /* Vector */
 
     borderRadius: 9,
-  
+
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
@@ -560,7 +578,7 @@ const styles = StyleSheet.create({
     flex: 1,
     // justifyContent: 'center',
     alignItems: 'center',
-    marginTop:200
+    marginTop: 200
   },
   loadingText: {
     fontSize: 16,

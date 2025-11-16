@@ -9,7 +9,7 @@ export default function SignupScreen({ navigation }: { navigation: any }) {
   const [countryCode, setCountryCode] = useState<string>('+1');
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
-   const [loading, setLoading] = useState<Boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   // const [loading, setLoading] useState<String>('')
 
   const isValid = useMemo(() => {

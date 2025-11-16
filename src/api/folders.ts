@@ -7,8 +7,13 @@ export const foldersAPI = {
   },
 
   getTree: async () => {
-    const response = await api.get('/folders');
-    return response.data;
+    try {
+      const response = await api.get('/folders');
+      return response.data;
+    } catch (error:any) {
+      console.log(error.response.data)
+      throw error;
+    }
   },
 
   getById: async (folderId: string) => {

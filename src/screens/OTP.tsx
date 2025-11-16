@@ -142,7 +142,7 @@ export default function OTPScreen({ route, navigation }: Params) {
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
-                ref={(ref) => (inputRefs.current[index] = ref)}
+                ref={(ref) => {if (ref) inputRefs.current[index] = ref;}}
                 value={digit}
                 onChangeText={(text) => handleOtpChange(text.replace(/[^0-9]/g, ''), index)}
                 onKeyPress={(e) => handleKeyPress(e, index)}
