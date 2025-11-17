@@ -31,13 +31,19 @@ export type RootStackParamList = {
 };
 
 export type File = {
-  id: string;
+   id: string;
   name: string;
-  folderId: string;
-  size: number;
-  mimeType: string;
-  key: string;
-  url?: string;
-  createdAt: string;
-  updatedAt: string;
+  path?: string;
+  s3Key?: string;
+  s3Url?: string; // Add this
+  mimeType?: string;
+  size?: number | string;
+  folderId?: string;
+  folder?: {
+    id: string;
+    name: string;
+  };
+  userId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
 };

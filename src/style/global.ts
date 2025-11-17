@@ -90,6 +90,6 @@ export const colors = {
   text: '#000',
   textSecondary: '#666',
   border: '#E2E8F0',
-  background: '#F8F9FA',
+  background: '#F8FAFC',
   placeholder: '#A0AEC0',
 };

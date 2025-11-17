@@ -5,6 +5,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useAuth } from '../contexts/AuthContext';
 import { File, Folder } from '../types';
 
+import { Image } from 'react-native';
+
 import {
   Fab,
   CreateFolderModal,
@@ -34,6 +36,9 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [showActions, setShowActions] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
+  
+const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+const [showViewMenu, setShowViewMenu] = useState(false);
 
 
   const [showFolderModal, setShowFolderModal] = useState<boolean>(false);
@@ -257,6 +262,81 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
     }
   };
 
+
+
+
+const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
+  // Check if it's a file
+  if ('path' in item) {
+    // Render File Card with Image Preview
+    return (
+      <View style={styles.fileCard}>
+        {/* File Preview/Thumbnail */}
+        <TouchableOpacity 
+          style={styles.previewContainer}
+          onPress={() => open(item)}
+          activeOpacity={0.9}
+        >
+          {item.s3Url || item.path ? (
+            <Image
+              source={{ uri: item.s3Url || item.path }}
+              style={styles.thumbnail}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.placeholderThumbnail}>
+              <MaterialCommunityIcons name="file-document" size={40} color="#6b5cdb" />
+              <Text style={styles.previewText}>File Preview</Text>
+              <Text style={styles.previewText}>Thumbnail</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+
+        {/* File Details Button */}
+        <TouchableOpacity
+          style={styles.detailsButton}
+          onPress={() => open(item)}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.detailsButtonText}>File Details</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  // Render Folder Card with Icon
+  return (
+    <TouchableOpacity 
+      style={styles.folderCardGrid} 
+      onPress={() => open(item)} 
+      activeOpacity={0.7}
+    >
+      <LinearGradient
+        colors={[colors.primary, colors.secondary]}
+        start={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.folderIconContainer}
+      >
+        <MaterialCommunityIcons name="folder-open" size={26} color="#fff" />
+      </LinearGradient>
+      
+      <View style={styles.folderInfo}>
+        <Text style={[styles.folderName, styles.centerText]} numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text style={[styles.folderSubtitle, styles.centerText]} numberOfLines={1}>
+          {getItemSubtitle(item)}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
+
+
+
+
+
   const renderFolderCard = ({ item }: { item: File | Folder }) => (
     <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
        <LinearGradient
@@ -265,7 +345,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         end={{ x: 1, y: 1 }}
         style={styles.folderIcon}
       >
-       {getItemSubtitle(item) ==='File' ?  <MaterialCommunityIcons name="file" size={26} color="#fff" />:<MaterialCommunityIcons name="folder" size={26} color="#fff" /> } 
+       {getItemSubtitle(item) ==='File' ?  <MaterialCommunityIcons name="file" size={26} color="#fff" />:<MaterialCommunityIcons name="folder-open" size={26} color="#fff" /> } 
       </LinearGradient> 
       
       <View style={styles.folderInfo}>
@@ -276,57 +356,50 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   );
 
 
-  const fileOptions = [
-    {
-      icon: '📝',
-      label: 'Register Product',
-      onPress: () => { setShowFileOptions(false); navigation.navigate('RegisterProduct', { file: selectedFile }); },
-    },
-    {
-      icon: '📤',
-      label: 'Share',
-      onPress: () => setShowFileOptions(false),
-    },
-    {
-      icon: '🔗',
-      label: 'Create Link',
-      onPress: () => setShowFileOptions(false),
-    },
-    {
-      icon: '📋',
-      label: 'Make a Copy',
-      onPress: () => setShowFileOptions(false),
-    },
-    {
-      icon: '⬇️',
-      label: 'Download/Preview',
-      onPress: () => setShowFileOptions(false),
-    },
-    {
-      icon: '🗑️',
-      label: 'Delete',
-      onPress: () => setShowFileOptions(false),
-      isDanger: true,
-    },
-  ];
 
-  const headerMenuOptions = [
-    {
-      icon: '🚪',
-      label: 'Logout',
-      onPress: handleLogout,
-      isDanger: true,
-    },
-  ];
+
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={globalStyles.Pageheader}>
         <Text style={styles.headerTitle}>My File Vault</Text>
-        <TouchableOpacity onPress={() => setShowActions(true)} style={styles.addButton}>
-          <MaterialCommunityIcons name="plus" size={24} color="#333" />
-        </TouchableOpacity>
+
+<TouchableOpacity 
+  onPress={() => setShowViewMenu(!showViewMenu)} 
+  style={styles.addButton}
+>
+  <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
+</TouchableOpacity>
+
+{showViewMenu && (
+  <View style={styles.viewMenuDropdown}>
+    <TouchableOpacity
+      style={styles.viewMenuItem}
+      onPress={() => {
+        setViewMode('grid');
+        setShowViewMenu(false);
+      }}
+    >
+      <MaterialCommunityIcons name="view-grid" size={20} color="#6b5cdb" />
+      <Text style={styles.viewMenuText}>Grid View</Text>
+      {viewMode === 'grid' && <MaterialCommunityIcons name="check" size={20} color="#6b5cdb" />}
+    </TouchableOpacity>
+    
+    <TouchableOpacity
+      style={styles.viewMenuItem}
+      onPress={() => {
+        setViewMode('list');
+        setShowViewMenu(false);
+      }}
+    >
+      <MaterialCommunityIcons name="view-list" size={20} color="#6b5cdb" />
+      <Text style={styles.viewMenuText}>List View</Text>
+      {viewMode === 'list' && <MaterialCommunityIcons name="check" size={20} color="#6b5cdb" />}
+    </TouchableOpacity>
+  </View>
+)}
+
       </View>
 
       {/* User Info */}
@@ -344,7 +417,24 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
           {/* <Text style={styles.loadingText}>Loading...</Text> */}
         </View>
       ) : (
-        <FlatList
+      
+
+        viewMode === 'grid'?  <FlatList
+          data={displayEntries}
+          key="grid"
+          keyExtractor={(item) => item.id}
+          renderItem={renderFolderCardGrid}
+          contentContainerStyle={styles.gridContainer}
+          showsVerticalScrollIndicator={false}
+          numColumns={2}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Text style={styles.emptyText}>No folders or files yet</Text>
+            </View>
+          }
+        /> :  
+         <FlatList
+          key="list"
           data={displayEntries}
           keyExtractor={(item) => item.id}
           renderItem={renderFolderCard}
@@ -356,6 +446,11 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
             </View>
           }
         />
+      
+
+
+
+        
       )}
 
       {/* FAB */}
@@ -373,6 +468,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
         setShowFilePicker={setShowFilePicker}
         setShowActions={setShowActions}
       /> */}
+
+      
 
       <Fab
         showActions={showActions}
@@ -450,6 +547,10 @@ const styles = StyleSheet.create({
   },
     thumbnail: {
     width: '100%',
+    borderRadius:10,
+    borderBottomEndRadius:0,
+    borderBottomLeftRadius:0,
+    borderBottomRightRadius:0,
     height: '100%',
   },
   userSection: {
@@ -461,6 +562,104 @@ const styles = StyleSheet.create({
     // borderBottomWidth: 8,
     borderBottomColor: '#f5f5f5',
   },
+  centerText: {
+textAlign:'center'
+  },
+
+    previewContainer: {
+    width: '100%',
+
+    aspectRatio: 1, // Square image area
+    // backgroundColor: '#E8E4F8',
+  },
+   folderCardGrid: {
+    // flex: 1,
+     width: '45%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    textAlign:'center',
+    margin: 8,
+    alignItems: 'center',
+    minHeight: 140,
+    elevation: 2,
+    shadowColor: '#0000003a',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+  },
+   fileCard: {
+    width: '45%',
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    overflow: 'hidden',
+    // marginBottom: 16,
+    padding:4,
+     margin: 8,
+    shadowColor: '#0000003a',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+
+  placeholderThumbnail: {
+    width: '100%',
+    height: '80%',
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#E8E4F8',
+  },
+  previewText: {
+    fontSize: 13,
+    color: '#6b5cdb',
+    // marginTop: 4,
+    textAlign: 'center',
+  },
+  detailsButton: {
+    backgroundColor: '#6b5cdb',
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderBottomLeftRadius:9,
+    borderBottomRightRadius:9,
+  },
+  detailsButtonText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#fff',
+  },
+viewMenuDropdown: {
+  position: 'absolute',
+  top: 60,
+  right: 16,
+  backgroundColor: '#fff',
+  borderRadius: 12,
+  padding: 8,
+  shadowColor: '#000',
+  shadowOffset: { width: 0, height: 2 },
+  shadowOpacity: 0.2,
+  shadowRadius: 8,
+  elevation: 5,
+  zIndex: 1000,
+},
+viewMenuItem: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 16,
+  paddingVertical: 12,
+  gap: 12,
+},
+viewMenuText: {
+  flex: 1,
+  fontSize: 15,
+  color: '#333',
+},
+
+
   avatar: {
     width: 42,
     height: 42,
@@ -480,6 +679,11 @@ const styles = StyleSheet.create({
     color: colors.title,
     fontWeight: '400',
   },
+    gridContainer: {
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 80,
+  },
   listContent: {
     paddingHorizontal: 20,
     paddingTop: 12,
@@ -495,6 +699,17 @@ const styles = StyleSheet.create({
 
 
   },
+ 
+ folderIconContainer: {
+    width: 54,
+    height: 54, 
+    borderRadius: 12,
+    // backgroundColor: '#6b5cdb',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  
   folderIcon: {
     width: 46,
     height: 46,
