@@ -41,7 +41,7 @@ export const globalStyles = StyleSheet.create({
   // Containers
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#F8F9FA',
   },
   scrollContent: {
     flexGrow: 1,
@@ -51,6 +51,15 @@ export const globalStyles = StyleSheet.create({
   },
   
   // Header
+    Pageheader: {
+    paddingTop: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 12,
+    backgroundColor: '#fff',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',

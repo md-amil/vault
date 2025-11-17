@@ -13,10 +13,11 @@ import {
   HeaderOptionsMenu,
 } from '../components';
 import { foldersAPI, filesAPI } from '../api';
-import { colors } from '../style/global';
+import { colors, globalStyles } from '../style/global';
 import LinearGradient from 'react-native-linear-gradient';
 import UploadOptionsModal from '../components/UploadOptionsModal';
 import AddDocumentModal from '../components/AddDocumentModal';
+
 
 export default function HomeScreen({ navigation }: { navigation: any }) {
   const { logout } = useAuth();
@@ -33,7 +34,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   const [loading, setLoading] = useState<boolean>(true);
   const [showActions, setShowActions] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
-  const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
+
 
   const [showFolderModal, setShowFolderModal] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
@@ -118,16 +119,23 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   async function open(item: File | Folder) {
     console.log(item, 'checking item')
+
     if ('path' in item) {
       setSelectedFile(item as File);
       setShowFileOptions(true);
-      return;
+     
+       navigation.navigate('FileDetails', { 
+      file: item as File 
+    });
+    return;
     }
     setLoading(true);
     const files = await filesAPI.getByFolder(item.id);
+ console.log(files, 'checking files')
     setStack((s) => [...s, { ...item, files } as any]);
     setLoading(false);
   }
+ 
 
   const updateChild = (r: Folder, newFolder: Folder, key: 'children' | 'files' = 'children') => {
     return {
@@ -199,6 +207,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       pushPickedAssets(res.assets);
     } finally {
       setShowFilePicker(false);
+      setShowUploadModal(false)
       setShowActions(false);
     }
   }
@@ -213,7 +222,8 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       if (res.didCancel) return;
       pushPickedAssets(res.assets);
     } finally {
-      setShowFilePicker(false);
+        setShowFolderModal(false)
+      setShowUploadModal(false);
       setShowActions(false);
     }
   }
@@ -249,17 +259,18 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
 
   const renderFolderCard = ({ item }: { item: File | Folder }) => (
     <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
-      <LinearGradient
+       <LinearGradient
         colors={[colors.primary, colors.secondary]}
         start={{ x: 0, y: 1 }}
         end={{ x: 1, y: 1 }}
         style={styles.folderIcon}
       >
-        <MaterialCommunityIcons name="folder" size={26} color="#fff" />
-      </LinearGradient>
+       {getItemSubtitle(item) ==='File' ?  <MaterialCommunityIcons name="file" size={26} color="#fff" />:<MaterialCommunityIcons name="folder" size={26} color="#fff" /> } 
+      </LinearGradient> 
+      
       <View style={styles.folderInfo}>
         <Text style={styles.folderName}>{item.name}</Text>
-        <Text style={styles.folderSubtitle}>{getItemSubtitle(item)}</Text>
+        <Text style={styles.folderSubtitle}>{getItemSubtitle(item)} </Text>
       </View>
     </TouchableOpacity>
   );
@@ -311,7 +322,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
   return (
     <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+      <View style={globalStyles.Pageheader}>
         <Text style={styles.headerTitle}>My File Vault</Text>
         <TouchableOpacity onPress={() => setShowActions(true)} style={styles.addButton}>
           <MaterialCommunityIcons name="plus" size={24} color="#333" />
@@ -404,67 +415,7 @@ export default function HomeScreen({ navigation }: { navigation: any }) {
       />
 
       {/* Add Document Modal */}
-      <AddDocumentModal
-        visible={showAddDocumentModal}
-        onClose={() => setShowAddDocumentModal(false)}
-        folders={displayEntries.filter(item => !('path' in item))}
-        onSave={async (data) => {
-          try {
-            setLoading(true);
-
-            // Check if folder exists or needs to be created
-            let folderId = data.folderId;
-
-            // If folderId is "new" or doesn't exist, create the folder
-            if (!folderId || folderId === 'new') {
-              const folderName = data.folderName || 'New Folder';
-              const newFolder = await foldersAPI.create({
-                name: folderName,
-                parentId: current.id === 'root' ? undefined : current.id
-              });
-
-              // Update local state
-              if (stack.length === 0) {
-                setRoot((r) => updateChild(r, newFolder));
-              } else {
-                setStack((s) => s.map((folder, index) => {
-                  if (index !== s.length - 1) return folder;
-                  return updateChild(folder, newFolder);
-                }));
-              }
-
-              folderId = newFolder.id;
-            }
-
-            // Now create/save the document/file with the correct folderId
-            const fileData = {
-              name: data.fileName,
-              folderId: folderId,
-              category: data.category,
-              remarks: data.remarks,
-              userId: 'user123', // TODO: Replace with actual user ID from context
-            };
-
-            // Save document via API
-            await filesAPI.create(fileData);
-            // or await filesAPI.upload(formData); depending on your API
-
-            setShowAddDocumentModal(false);
-            Alert.alert('Success', 'Document saved successfully');
-
-            // Optionally refresh the folder data
-            await fetchFolderData();
-          } catch (error: any) {
-            console.error('Save document error:', error);
-            Alert.alert(
-              'Error',
-              error.response?.data?.message || 'Failed to save document details'
-            );
-          } finally {
-            setLoading(false);
-          }
-        }}
-      />
+   
 
       {/* <FileOptionsModal
         visible={showFileOptions}
@@ -487,15 +438,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  header: {
-    paddingTop: 40,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 12,
-    backgroundColor: '#fff',
-  },
+
   headerTitle: {
 
     fontSize: 20,
@@ -504,6 +447,10 @@ const styles = StyleSheet.create({
   },
   addButton: {
     padding: 4,
+  },
+    thumbnail: {
+    width: '100%',
+    height: '100%',
   },
   userSection: {
     flexDirection: 'row',

@@ -59,7 +59,7 @@ export default function UploadOptionsModal({
             <Text style={styles.subtitle}>
               Add your files to organize them better
             </Text>
-            <Spacer height={30} />
+            <Spacer height={20} />
 
             {/* Options Grid */}
             <View style={styles.grid}>
@@ -136,18 +136,19 @@ export default function UploadOptionsModal({
               </TouchableOpacity>
 
               {/* Cancel */}
+            
+            </View>
+              <Spacer height={30} />
               <TouchableOpacity
-                style={[styles.card, styles.cancelCard]}
+                style={styles.cancelButton}
                 onPress={onClose}
                 activeOpacity={0.7}
-              >
-                <View style={[styles.iconContainer, styles.cancelIcon]}>
-                  <MaterialCommunityIcons name="close" size={40} color="#ff4d8f" />
-                </View>
-                <Text style={[styles.cardLabel, styles.cancelLabel]}>Cancel</Text>
-              </TouchableOpacity>
-            </View>
-             <Spacer height={50} />
+                >
+                <MaterialCommunityIcons name="close" size={24} color="#ff4d8f" />
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+             {/* <Spacer height={50} /> */}
           </View>
         </View>
       </View>
@@ -156,6 +157,23 @@ export default function UploadOptionsModal({
 }
 
 const styles = StyleSheet.create({
+     cancelButton: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 6,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#ff4d8f',
+    backgroundColor: '#fff',
+    gap: 8,
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#ff4d8f',
+  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.5)',

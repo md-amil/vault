@@ -17,17 +17,19 @@ import Signup from './src/screens/signup';
 import Home from './src/screens/Home';
 import OTP from './src/screens/OTP';
 import Loading from './src/screens/Loading';
-
+import RegisterProduct from './src/screens/RegisterProduct';
+import FileDetailsScreen from './src/screens/FileDetailScreen';
 export type RootStackParamList = {
   Landing: undefined;
   Login: undefined;
   Signup: undefined;
   Home: undefined;
+  FileDetails:undefined;
   RegisterProduct: { file?: any } | undefined;
   OTP: { phone?: string; countryCode?: string } | undefined;
   Loading: undefined;
 };
-import RegisterProduct from './src/screens/RegisterProduct';
+
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -48,6 +50,8 @@ function AppNavigator() {
         <Stack.Screen name="Landing" component={Landing} options={{ headerShown: false }} />
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Signup" component={Signup} />
+          <Stack.Screen name="FileDetails" component={FileDetailsScreen} />
+
   <Stack.Screen name="RegisterProduct" component={RegisterProduct} options={{ title: 'Add Document Details' }} />
         <Stack.Screen name="OTP" component={OTP} options={{ title: 'Verify' }} />
         <Stack.Screen name="Home" component={Home} />

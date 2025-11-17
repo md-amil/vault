@@ -118,18 +118,18 @@ export default function AddDocumentModal({
               <View style={styles.searchContainer}>
                 <TextInput
                   style={styles.searchInput}
-                  placeholder="Search Folder Name"
+                  placeholder="Add Tag Name"
                   placeholderTextColor="#A0AEC0"
                   value={searchQuery}
                   onChangeText={setSearchQuery}
                   onFocus={() => setShowFolderDropdown(true)}
                 />
-                <MaterialCommunityIcons
+                {/* <MaterialCommunityIcons
                   name="information-outline"
                   size={20}
                   color="#6b5cdb"
                   style={styles.infoIcon}
-                />
+                /> */}
               </View>
 
               {/* Folder Dropdown */}

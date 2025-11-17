@@ -16,6 +16,20 @@ export type Folder = {
   updatedAt: string;
 };
 
+export type RootStackParamList = {
+  // ... other screens
+  FolderDetails: { folder: { id: string; name: string } };
+  FileDetails: { 
+    file: {
+      id: string;
+      name: string;
+      path?: string;
+      size?: number;
+      createdAt?: string;
+    };
+  };
+};
+
 export type File = {
   id: string;
   name: string;
