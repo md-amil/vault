@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -19,11 +19,34 @@ import { globalStyles } from '../style/global';
 import GradientButton from '../components/GradientButton';
 import OutLineButton from '../components/OutLineButton';
 import AddDocumentModal from '../components/AddDocumentModal';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FileDetails'>;
 
 export default function FileDetailsScreen({ route, navigation }: Props) {
-  const { file } = route.params;
+ const { file } = route.params;
+  
+  // const [file, setFile] = useState<File>(initialFile as File);
+
+
+  // useEffect(() => {
+  //   fetchFileDetails();
+  // }, []);
+
+  // const fetchFileDetails = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const fileDetails = await filesAPI.getById(initialFile.id);
+  //     console.log('File details:', fileDetails);
+  //     setFile(fileDetails);
+  //   } catch (error) {
+  //     console.error('Error fetching file details:', error);
+  //     Alert.alert('Error', 'Failed to load file details');
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
 const [loading, setLoading] = useState(false);
   React.useEffect(() => {
@@ -32,18 +55,41 @@ const [loading, setLoading] = useState(false);
     });
   }, [navigation]);
 
-  const handleDownload = async () => {
+ const handleDownload = async () => {
     try {
-      if (file.path) {
-        // Open the file URL in browser or download
-        await Linking.openURL(file.path);
+      setLoading(true);
+      
+      // Get auth token
+      const token = await AsyncStorage.getItem('access_token');
+      
+      // Get download URL
+      const downloadUrl = filesAPI.getDownloadUrl(file.id);
+      
+      // Add token to URL as query param (if your API supports it)
+      const downloadUrlWithAuth = `${downloadUrl}?token=${token}`;
+      
+      // Open download URL
+      const canOpen = await Linking.canOpenURL(downloadUrlWithAuth);
+      
+      if (canOpen) {
+        await Linking.openURL(downloadUrlWithAuth);
+        Alert.alert('Success', 'Download started');
       } else {
-        Alert.alert('Error', 'File URL not available');
+        // Fallback: use s3Url if available
+        if (file.s3Url) {
+          await Linking.openURL(file.s3Url);
+        } else {
+          Alert.alert('Error', 'Cannot open download link');
+        }
       }
     } catch (error) {
+      console.error('Download error:', error);
       Alert.alert('Error', 'Failed to download file');
+    } finally {
+      setLoading(false);
     }
   };
+
 
   const handleShare = () => {
     Alert.alert('Share File', 'Share functionality coming soon');
@@ -70,7 +116,11 @@ const [loading, setLoading] = useState(false);
             try {
               await filesAPI.delete(file.id);
               Alert.alert('Success', 'File deleted successfully');
-              navigation.goBack();
+              
+                                   navigation.goBack();
+
+
+              // navigation.goBack();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete file');
             }
@@ -248,25 +298,7 @@ const [loading, setLoading] = useState(false);
                   let folderId = data.folderId;
       
                   // If folderId is "new" or doesn't exist, create the folder
-                  if (!folderId || folderId === 'new') {
-                    const folderName = data.folderName || 'New Folder';
-                    const newFolder = await foldersAPI.create({
-                      name: folderName,
-                      parentId: current.id === 'root' ? undefined : current.id
-                    });
-      
-                    // Update local state
-                    if (stack.length === 0) {
-                      setRoot((r) => updateChild(r, newFolder));
-                    } else {
-                      setStack((s) => s.map((folder, index) => {
-                        if (index !== s.length - 1) return folder;
-                        return updateChild(folder, newFolder);
-                      }));
-                    }
-      
-                    folderId = newFolder.id;
-                  }
+                 
       
                   // Now create/save the document/file with the correct folderId
                   const fileData = {

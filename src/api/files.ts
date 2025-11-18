@@ -63,10 +63,20 @@ export const filesAPI = {
   },
 
   // Download file
+  // Download file
   download: async (fileId: string) => {
-    const response = await api.get(`/files/${fileId}/download`);
+    const response = await api.get(`/files/${fileId}/download`, {
+      responseType: 'blob', // Important for binary data
+    });
     return response.data;
   },
+
+  // Get download URL (useful for Linking.openURL)
+  getDownloadUrl: (fileId: string) => {
+    const baseURL = api.defaults.baseURL || 'https://vault-api-lyk2.onrender.com/api';
+    return `${baseURL}/files/${fileId}/download`;
+  },
+
 
   // Get presigned download URL
   getPresignedDownloadUrl: async (fileId: string, expiresIn?: number) => {

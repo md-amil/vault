@@ -19,9 +19,10 @@ import { colors, globalStyles } from '../style/global';
 import LinearGradient from 'react-native-linear-gradient';
 import UploadOptionsModal from '../components/UploadOptionsModal';
 import AddDocumentModal from '../components/AddDocumentModal';
+import { useFocusEffect } from '@react-navigation/native';
 
 
-export default function HomeScreen({ navigation }: { navigation: any }) {
+export default function HomeScreen({ navigation,route  }: { navigation: any, route :any }) {
   const { logout } = useAuth();
   const [root, setRoot] = useState<Folder>({
     id: 'root',
@@ -115,6 +116,35 @@ const [showViewMenu, setShowViewMenu] = useState(false);
     const backHandler = BackHandler.addEventListener('hardwareBackPress', backAction);
     return () => backHandler.remove();
   }, [stack.length, goUp]);
+
+useFocusEffect(
+  useCallback(() => {
+    // Refresh current folder when screen comes into focus
+    const refreshCurrentFolder = async () => {
+      if (stack.length > 0) {
+        try {
+          const currentFolder = stack[stack.length - 1];
+          const files = await filesAPI.getByFolder(currentFolder.id);
+          
+          setStack((s) =>
+            s.map((folder, index) => {
+              if (index !== s.length - 1) return folder;
+              return { ...folder, files };
+            })
+          );
+        } catch (error) {
+          console.error('Error refreshing folder:', error);
+        }
+      } else {
+        // Refresh root
+        fetchFolderData();
+      }
+    };
+    
+    refreshCurrentFolder();
+  }, [stack.length])
+);
+
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -362,8 +392,25 @@ const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
   return (
     <View style={styles.container}>
       {/* Header */}
+
+  
       <View style={globalStyles.Pageheader}>
-        <Text style={styles.headerTitle}>My File Vault</Text>
+        <View style={styles.backButtonContainer}>
+        {stack.length > 0 && (
+            <TouchableOpacity 
+              onPress={goUp} 
+              style={styles.backButton}
+            >
+              <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+            </TouchableOpacity>
+          )}
+          
+          <Text style={styles.headerTitle}>
+            {stack.length > 0 ? current.name : 'My File Vault'}
+          </Text>
+        </View>
+            
+        {/* <Text style={styles.headerTitle}>My File Vault</Text> */}
 
 <TouchableOpacity 
   onPress={() => setShowViewMenu(!showViewMenu)} 
@@ -403,12 +450,14 @@ const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
       </View>
 
       {/* User Info */}
-      <View style={styles.userSection}>
+
+      {stack.length == 0 && (<View style={styles.userSection}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>J</Text>
         </View>
         <Text style={styles.userName}>John Doe</Text>
-      </View>
+      </View>)}
+      
 
       {/* Folder List */}
       {loading ? (
@@ -552,6 +601,16 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius:0,
     borderBottomRightRadius:0,
     height: '100%',
+  },
+   backButtonContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1, // Take remaining space in header
+  },
+    backButton: {
+    padding: 8,
+   
+    // marginRight: 8,
   },
   userSection: {
     flexDirection: 'row',
