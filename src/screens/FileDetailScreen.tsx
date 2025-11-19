@@ -30,10 +30,7 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
   // const [file, setFile] = useState<File>(initialFile as File);
 
 
-  // useEffect(() => {
-  //   fetchFileDetails();
-  // }, []);
-
+ 
   // const fetchFileDetails = async () => {
   //   try {
   //     setLoading(true);
@@ -49,6 +46,7 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
   // };
 const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
 const [loading, setLoading] = useState(false);
+
   React.useEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -193,7 +191,7 @@ const [loading, setLoading] = useState(false);
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>File Size</Text>
             <Text style={styles.infoValue}>
-              {formatFileSize(file.size || 2457600)}
+              {formatFileSize(file?.size || 2457600)}
             </Text>
           </View>
 
@@ -206,7 +204,7 @@ const [loading, setLoading] = useState(false);
 
           <View style={[styles.infoRow, styles.lastInfoRow]}>
             <Text style={styles.infoLabel}>File Type</Text>
-            <Text style={styles.infoValue}>{getFileType(file.name)}</Text>
+            <Text style={styles.infoValue}>{getFileType(file?.name)}</Text>
           </View>
         </View>
 
@@ -289,34 +287,34 @@ const [loading, setLoading] = useState(false);
          <AddDocumentModal
               visible={showAddDocumentModal}
               onClose={() => setShowAddDocumentModal(false)}
-              folders={[]}
+              fileId={file.id}
               onSave={async (data) => {
                 try {
                   setLoading(true);
       
-                  // Check if folder exists or needs to be created
-                  let folderId = data.folderId;
-      
-                  // If folderId is "new" or doesn't exist, create the folder
                  
+                console.log(data,'checking data which data ')
       
-                  // Now create/save the document/file with the correct folderId
+
                   const fileData = {
                     name: data.fileName,
-                    folderId: folderId,
+                    tag: data.tagName,
                     category: data.category,
                     remarks: data.remarks,
-                    userId: 'user123', // TODO: Replace with actual user ID from context
+                    fileId: file.id, 
                   };
       
-                  // Save document via API
-                  await filesAPI.create(fileData);
-                  // or await filesAPI.upload(formData); depending on your API
+                  if(data?.updateId) {
+                    await filesAPI.updateDocument(data?.updateId, fileData);
+                  }else {
+                  await filesAPI.createDocument(fileData);
       
+                  }
+                
                   setShowAddDocumentModal(false);
                   Alert.alert('Success', 'Document saved successfully');
-      
-                  // Optionally refresh the folder data
+                 setLoading(false);
+                  return   true
                  
                 } catch (error: any) {
                   console.error('Save document error:', error);

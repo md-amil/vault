@@ -69,11 +69,11 @@ const [showViewMenu, setShowViewMenu] = useState(false);
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-      console.log(folders, 'checking folder')
+    
       setRoot(rootFolder);
     } catch (error) {
       console.error('Error fetching folder data:', error);
-      Alert.alert('Error', 'Failed to load folders', [{ text: 'OK' }]);
+      Alert.alert('Error','Failed to load folders', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }

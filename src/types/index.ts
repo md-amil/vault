@@ -21,13 +21,14 @@ export type RootStackParamList = {
   FolderDetails: { folder: { id: string; name: string } };
   FileDetails: { 
     file: {
+
       id: string;
-  name: string;
+  name?: string;
   path?: string;
   s3Key?: string;
   s3Url?: string;
   mimeType?: string;
-  size?: number | string;
+  size?: string | number |undefined;
   folderId?: string;
   folder?: {
     id: string;

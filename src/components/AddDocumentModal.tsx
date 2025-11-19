@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -15,18 +15,23 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import GradientButton from './GradientButton';
 import Spacer from './Spacer';
+import { filesAPI } from '../api';
+
+interface fileDetailSchema {
+  id:string
+}
 
 interface AddDocumentModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (data: {
-    folderId: string;
-    folderName?: string; // Add this for new folder creation
+updateId?:string;
+    tagName?: string; // Add this for new folder creation
     fileName: string;
     category: string;
     remarks: string;
   }) => void;
-  folders: Array<{ id: string; name: string; count?: number }>;
+  fileId: string;
 }
 
 const { width, height } = Dimensions.get('window');
@@ -35,52 +40,89 @@ export default function AddDocumentModal({
   visible,
   onClose,
   onSave,
-  folders = [],
+  fileId,
 }: AddDocumentModalProps) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFolder, setSelectedFolder] = useState<string>('');
+  const [tagName, setTagName] = useState<string>('');
   const [showFolderDropdown, setShowFolderDropdown] = useState(false);
   const [fileName, setFileName] = useState('');
   const [category, setCategory] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [remarks, setRemarks] = useState('');
+  const [fileDetail, setFileDetail] = useState<fileDetailSchema>()
 
   const categories = ['Invoice', 'Manual', 'Warranty'];
 
-  const filteredFolders = folders.filter((folder) =>
-    folder.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+
 
  const handleSave = () => {
   if (!fileName || !category) {
+
+
     Alert.alert('Error', 'Please fill in all required fields');
     return;
   }
   
   // If no folder selected but search query exists, mark for new folder creation
-  const folderId = selectedFolder || 'new';
-  const folderName = selectedFolder ? undefined : searchQuery.trim();
+ 
   
-  if (!selectedFolder && !folderName) {
-    Alert.alert('Error', 'Please select or create a folder');
-    return;
-  }
-  
-  onSave({
-    folderId,
-    folderName, // Pass folder name if creating new
+  console.log(searchQuery,'checking')
+  const checkinSave = onSave({
+    updateId:fileDetail?.id,
+    tagName, // Pass folder name if creating new
     fileName,
     category,
     remarks,
   });
   
+  console.log(checkinSave._j,'checking save or not')
   // Reset form
-  setSearchQuery('');
-  setSelectedFolder('');
+  if(checkinSave._j) {
+ setSearchQuery('');
+  setTagName('');
   setFileName('');
   setCategory('');
   setRemarks('');
+  }
+
+ 
 };
+
+const getFileDetail = async() => {
+  try {
+    const data = await filesAPI.getFileDetail(fileId);
+    console.log(data, fileId,'checking data ')
+     setFileDetail(data?.fileDetail)
+   const fileDetailData = data?.fileDetail
+   
+    if(data?.fileDetail?.id) {
+      setTagName(fileDetailData?.tag);
+      setFileName(fileDetailData?.name);
+      setCategory(fileDetailData?.tag);
+      setRemarks(fileDetailData?.remarks);
+    }
+
+              
+  }catch(error) {
+
+ console.error('Save document error:', error);
+                  Alert.alert(
+                    'Error',
+                    error.response?.data?.message || 'Failed to save document details'
+                  );
+  }finally {
+
+  }
+
+}
+
+useEffect(()=> {
+  console.log(fileId)
+  if(fileId) {
+    getFileDetail()
+  }
+
+},[0])
 
 
   return (
@@ -120,8 +162,8 @@ export default function AddDocumentModal({
                   style={styles.searchInput}
                   placeholder="Add Tag Name"
                   placeholderTextColor="#A0AEC0"
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
+                  value={tagName}
+                  onChangeText={setTagName}
                   onFocus={() => setShowFolderDropdown(true)}
                 />
                 {/* <MaterialCommunityIcons
@@ -133,7 +175,7 @@ export default function AddDocumentModal({
               </View>
 
               {/* Folder Dropdown */}
-              {showFolderDropdown && searchQuery && filteredFolders.length > 0 && (
+              {/* {showFolderDropdown && searchQuery && filteredFolders.length > 0 && (
                 <View style={styles.dropdown}>
                   <View style={styles.dropdownHeaderContainer}>
                     <Text style={styles.dropdownHeaderLabel}>Wash</Text>
@@ -143,7 +185,6 @@ export default function AddDocumentModal({
                       key={folder.id}
                       style={styles.dropdownItem}
                       onPress={() => {
-                        setSelectedFolder(folder.id);
                         setSearchQuery(folder.name);
                         setShowFolderDropdown(false);
                       }}
@@ -164,7 +205,7 @@ export default function AddDocumentModal({
                     </Text>
                   </TouchableOpacity>
                 </View>
-              )}
+              )} */}
             </View>
 
             <Spacer height={20} />
@@ -249,7 +290,7 @@ export default function AddDocumentModal({
 
             {/* Save Button */}
             <GradientButton
-              title="Save Securely"
+              title={fileDetail?.id ?'Update':'Save Securely'}
               onPress={handleSave}
               disabled={  !fileName || !category}
             />

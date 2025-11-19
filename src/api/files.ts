@@ -38,6 +38,34 @@ export const filesAPI = {
     return response.data;
   },
 
+    createDocument: async (fileData: {
+    name: string;
+    fileId: string;
+    remarks: string;
+    category: string;
+    tag:string|undefined
+  }) => {
+    const response = await api.post('/file-details', fileData);
+    return response.data;
+  },
+    updateDocument: async (id:string,fileData: {
+    name: string;
+    fileId: string;
+    remarks: string;
+    category: string;
+    tag:string|undefined;
+    
+  }) => {
+    const response = await api.patch(`/file-details/${id}`, fileData);
+    return response.data;
+  },
+
+
+     getFileDetail: async (id:string) => {
+    const response = await api.get(`/files/${id}`);
+    return response.data;
+  },
+
   getAll: async (folderId?: string) => {
     const params = new URLSearchParams();
     if (folderId) params.append('folderId', folderId);
