@@ -4,9 +4,7 @@ import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-pick
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
 import { File, Folder } from '../types';
-
 import { Image } from 'react-native';
-
 import {
   Fab,
   CreateFolderModal,
@@ -21,8 +19,7 @@ import UploadOptionsModal from '../components/UploadOptionsModal';
 import AddDocumentModal from '../components/AddDocumentModal';
 import { useFocusEffect } from '@react-navigation/native';
 
-
-export default function HomeScreen({ navigation,route  }: { navigation: any, route :any }) {
+export default function HomeScreen({ navigation, route }: { navigation: any, route: any }) {
   const { logout } = useAuth();
   const [root, setRoot] = useState<Folder>({
     id: 'root',
@@ -37,11 +34,8 @@ export default function HomeScreen({ navigation,route  }: { navigation: any, rou
   const [loading, setLoading] = useState<boolean>(true);
   const [showActions, setShowActions] = useState<boolean>(false);
   const [showUploadModal, setShowUploadModal] = useState<boolean>(false);
-  
-const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-const [showViewMenu, setShowViewMenu] = useState(false);
-
-
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [showViewMenu, setShowViewMenu] = useState(false);
   const [showFolderModal, setShowFolderModal] = useState<boolean>(false);
   const [newFolderName, setNewFolderName] = useState<string>('');
   const [showFilePicker, setShowFilePicker] = useState<boolean>(false);
@@ -69,11 +63,10 @@ const [showViewMenu, setShowViewMenu] = useState(false);
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
-    
       setRoot(rootFolder);
     } catch (error) {
       console.error('Error fetching folder data:', error);
-      Alert.alert('Error','Failed to load folders', [{ text: 'OK' }]);
+      Alert.alert('Error', 'Failed to load folders', [{ text: 'OK' }]);
     } finally {
       setLoading(false);
     }
@@ -117,34 +110,31 @@ const [showViewMenu, setShowViewMenu] = useState(false);
     return () => backHandler.remove();
   }, [stack.length, goUp]);
 
-useFocusEffect(
-  useCallback(() => {
-    // Refresh current folder when screen comes into focus
-    const refreshCurrentFolder = async () => {
-      if (stack.length > 0) {
-        try {
-          const currentFolder = stack[stack.length - 1];
-          const files = await filesAPI.getByFolder(currentFolder.id);
-          
-          setStack((s) =>
-            s.map((folder, index) => {
-              if (index !== s.length - 1) return folder;
-              return { ...folder, files };
-            })
-          );
-        } catch (error) {
-          console.error('Error refreshing folder:', error);
+  useFocusEffect(
+    useCallback(() => {
+      const refreshCurrentFolder = async () => {
+        if (stack.length > 0) {
+          try {
+            const currentFolder = stack[stack.length - 1];
+            const files = await filesAPI.getByFolder(currentFolder.id);
+            
+            setStack((s) =>
+              s.map((folder, index) => {
+                if (index !== s.length - 1) return folder;
+                return { ...folder, files };
+              })
+            );
+          } catch (error) {
+            console.error('Error refreshing folder:', error);
+          }
+        } else {
+          fetchFolderData();
         }
-      } else {
-        // Refresh root
-        fetchFolderData();
-      }
-    };
-    
-    refreshCurrentFolder();
-  }, [stack.length])
-);
-
+      };
+      
+      refreshCurrentFolder();
+    }, [stack.length])
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -153,24 +143,19 @@ useFocusEffect(
   }, [navigation]);
 
   async function open(item: File | Folder) {
-    console.log(item, 'checking item')
-
     if ('path' in item) {
       setSelectedFile(item as File);
       setShowFileOptions(true);
-     
-       navigation.navigate('FileDetails', { 
-      file: item as File 
-    });
-    return;
+      navigation.navigate('FileDetails', { 
+        file: item as File 
+      });
+      return;
     }
     setLoading(true);
     const files = await filesAPI.getByFolder(item.id);
- console.log(files, 'checking files')
     setStack((s) => [...s, { ...item, files } as any]);
     setLoading(false);
   }
- 
 
   const updateChild = (r: Folder, newFolder: Folder, key: 'children' | 'files' = 'children') => {
     return {
@@ -202,8 +187,6 @@ useFocusEffect(
       Alert.alert('Error', 'Failed to create folder', [{ text: 'OK' }]);
     }
   }
-
-
 
   function pushPickedAssets(assets?: Asset[] | null) {
     if (!assets || assets.length === 0) return;
@@ -242,7 +225,7 @@ useFocusEffect(
       pushPickedAssets(res.assets);
     } finally {
       setShowFilePicker(false);
-      setShowUploadModal(false)
+      setShowUploadModal(false);
       setShowActions(false);
     }
   }
@@ -250,21 +233,20 @@ useFocusEffect(
   async function addFromGallery() {
     try {
       const res = await launchImageLibrary({ 
-        mediaType: 'mixed', // Supports both photos and videos
+        mediaType: 'mixed',
         selectionLimit: 0, 
         quality: 0.8 
       });
       if (res.didCancel) return;
       pushPickedAssets(res.assets);
     } finally {
-        setShowFolderModal(false)
+      setShowFolderModal(false);
       setShowUploadModal(false);
       setShowActions(false);
     }
   }
 
   async function addFromDocuments() {
-    // For now, show a message that document picking requires additional setup
     Alert.alert(
       'Documents Feature',
       'To pick PDF and ZIP files, we recommend:\n\n1. Use the Gallery option for images\n2. For PDFs/ZIPs, you can:\n   - Take a photo of the document\n   - Or we can add a compatible document picker library',
@@ -292,116 +274,87 @@ useFocusEffect(
     }
   };
 
+  const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
+    if ('path' in item) {
+      return (
+        <View style={styles.fileCard}>
+          <TouchableOpacity 
+            style={styles.previewContainer}
+            onPress={() => open(item)}
+            activeOpacity={0.7}
+          >
+            {item.s3Url || item.path ? (
+              <Image
+                source={{ uri: item.s3Url || item.path }}
+                style={styles.thumbnail}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.placeholderThumbnail}>
+                <MaterialCommunityIcons name="file-document-outline" size={40} color="#8E8E93" />
+              </View>
+            )}
+          </TouchableOpacity>
 
+          <TouchableOpacity
+            style={styles.detailsButton}
+            onPress={() => open(item)}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.detailsButtonText}>View Details</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
 
-
-const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
-  // Check if it's a file
-  if ('path' in item) {
-    // Render File Card with Image Preview
     return (
-      <View style={styles.fileCard}>
-        {/* File Preview/Thumbnail */}
-        <TouchableOpacity 
-          style={styles.previewContainer}
-          onPress={() => open(item)}
-          activeOpacity={0.9}
-        >
-          {item.s3Url || item.path ? (
-            <Image
-              source={{ uri: item.s3Url || item.path }}
-              style={styles.thumbnail}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.placeholderThumbnail}>
-              <MaterialCommunityIcons name="file-document" size={40} color="#6b5cdb" />
-              <Text style={styles.previewText}>File Preview</Text>
-              <Text style={styles.previewText}>Thumbnail</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-
-        {/* File Details Button */}
-        <TouchableOpacity
-          style={styles.detailsButton}
-          onPress={() => open(item)}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.detailsButtonText}>File Details</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  // Render Folder Card with Icon
-  return (
-    <TouchableOpacity 
-      style={styles.folderCardGrid} 
-      onPress={() => open(item)} 
-      activeOpacity={0.7}
-    >
-      <LinearGradient
-        colors={[colors.primary, colors.secondary]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.folderIconContainer}
+      <TouchableOpacity 
+        style={styles.folderCardGrid} 
+        onPress={() => open(item)} 
+        activeOpacity={0.7}
       >
-        <MaterialCommunityIcons name="folder-open" size={26} color="#fff" />
-      </LinearGradient>
-      
-      <View style={styles.folderInfo}>
-        <Text style={[styles.folderName, styles.centerText]} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={[styles.folderSubtitle, styles.centerText]} numberOfLines={1}>
-          {getItemSubtitle(item)}
-        </Text>
-      </View>
-    </TouchableOpacity>
-  );
-};
-
-
-
-
-
+        <View style={styles.folderIconContainer}>
+          <MaterialCommunityIcons name="folder" size={32} color="#FFFFFF" />
+        </View>
+        
+        <View style={styles.folderInfo}>
+          <Text style={[styles.folderName, styles.centerText]} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={[styles.folderSubtitle, styles.centerText]} numberOfLines={1}>
+            {getItemSubtitle(item)}
+          </Text>
+        </View>
+      </TouchableOpacity>
+    );
+  };
 
   const renderFolderCard = ({ item }: { item: File | Folder }) => (
     <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
-       <LinearGradient
-        colors={[colors.primary, colors.secondary]}
-        start={{ x: 0, y: 1 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.folderIcon}
-      >
-       {getItemSubtitle(item) ==='File' ?  <MaterialCommunityIcons name="file" size={26} color="#fff" />:<MaterialCommunityIcons name="folder-open" size={26} color="#fff" /> } 
-      </LinearGradient> 
+      <View style={styles.folderIcon}>
+        {getItemSubtitle(item) === 'File' ? 
+          <MaterialCommunityIcons name="file-document-outline" size={26} color="#FFFFFF" /> : 
+          <MaterialCommunityIcons name="folder" size={26} color="#FFFFFF" />
+        } 
+      </View>
       
       <View style={styles.folderInfo}>
         <Text style={styles.folderName}>{item.name}</Text>
-        <Text style={styles.folderSubtitle}>{getItemSubtitle(item)} </Text>
+        <Text style={styles.folderSubtitle}>{getItemSubtitle(item)}</Text>
       </View>
     </TouchableOpacity>
   );
 
-
-
-
-
   return (
     <View style={styles.container}>
-      {/* Header */}
-
-  
       <View style={globalStyles.Pageheader}>
         <View style={styles.backButtonContainer}>
-        {stack.length > 0 && (
+          {stack.length > 0 && (
             <TouchableOpacity 
               onPress={goUp} 
               style={styles.backButton}
             >
-              <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+              <MaterialCommunityIcons name="arrow-left" size={24} color="#1A1A1A" />
             </TouchableOpacity>
           )}
           
@@ -409,116 +362,90 @@ const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
             {stack.length > 0 ? current.name : 'My File Vault'}
           </Text>
         </View>
+
+        <TouchableOpacity 
+          onPress={() => setShowViewMenu(!showViewMenu)} 
+          style={styles.addButton}
+        >
+          <MaterialCommunityIcons name="dots-vertical" size={24} color="#1A1A1A" />
+        </TouchableOpacity>
+
+        {showViewMenu && (
+          <View style={styles.viewMenuDropdown}>
+            <TouchableOpacity
+              style={styles.viewMenuItem}
+              onPress={() => {
+                setViewMode('grid');
+                setShowViewMenu(false);
+              }}
+            >
+              <MaterialCommunityIcons name="view-grid" size={20} color="#007AFF" />
+              <Text style={styles.viewMenuText}>Grid View</Text>
+              {viewMode === 'grid' && <MaterialCommunityIcons name="check" size={20} color="#007AFF" />}
+            </TouchableOpacity>
             
-        {/* <Text style={styles.headerTitle}>My File Vault</Text> */}
-
-<TouchableOpacity 
-  onPress={() => setShowViewMenu(!showViewMenu)} 
-  style={styles.addButton}
->
-  <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
-</TouchableOpacity>
-
-{showViewMenu && (
-  <View style={styles.viewMenuDropdown}>
-    <TouchableOpacity
-      style={styles.viewMenuItem}
-      onPress={() => {
-        setViewMode('grid');
-        setShowViewMenu(false);
-      }}
-    >
-      <MaterialCommunityIcons name="view-grid" size={20} color="#6b5cdb" />
-      <Text style={styles.viewMenuText}>Grid View</Text>
-      {viewMode === 'grid' && <MaterialCommunityIcons name="check" size={20} color="#6b5cdb" />}
-    </TouchableOpacity>
-    
-    <TouchableOpacity
-      style={styles.viewMenuItem}
-      onPress={() => {
-        setViewMode('list');
-        setShowViewMenu(false);
-      }}
-    >
-      <MaterialCommunityIcons name="view-list" size={20} color="#6b5cdb" />
-      <Text style={styles.viewMenuText}>List View</Text>
-      {viewMode === 'list' && <MaterialCommunityIcons name="check" size={20} color="#6b5cdb" />}
-    </TouchableOpacity>
-  </View>
-)}
-
+            <TouchableOpacity
+              style={styles.viewMenuItem}
+              onPress={() => {
+                setViewMode('list');
+                setShowViewMenu(false);
+              }}
+            >
+              <MaterialCommunityIcons name="view-list" size={20} color="#007AFF" />
+              <Text style={styles.viewMenuText}>List View</Text>
+              {viewMode === 'list' && <MaterialCommunityIcons name="check" size={20} color="#007AFF" />}
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
 
-      {/* User Info */}
-
-      {stack.length == 0 && (<View style={styles.userSection}>
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>J</Text>
+      {stack.length === 0 && (
+        <View style={styles.userSection}>
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>J</Text>
+          </View>
+          <Text style={styles.userName}>John Doe</Text>
         </View>
-        <Text style={styles.userName}>John Doe</Text>
-      </View>)}
-      
-
-      {/* Folder List */}
-      {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6b5cdb" />
-          {/* <Text style={styles.loadingText}>Loading...</Text> */}
-        </View>
-      ) : (
-      
-
-        viewMode === 'grid'?  <FlatList
-          data={displayEntries}
-          key="grid"
-          keyExtractor={(item) => item.id}
-          renderItem={renderFolderCardGrid}
-          contentContainerStyle={styles.gridContainer}
-          showsVerticalScrollIndicator={false}
-          numColumns={2}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No folders or files yet</Text>
-            </View>
-          }
-        /> :  
-         <FlatList
-          key="list"
-          data={displayEntries}
-          keyExtractor={(item) => item.id}
-          renderItem={renderFolderCard}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>No folders or files yet</Text>
-            </View>
-          }
-        />
-      
-
-
-
-        
       )}
 
-      {/* FAB */}
-      {/* <TouchableOpacity 
-        style={styles.fab} 
-        onPress={() => setShowActions(true)}
-        activeOpacity={0.8}
-      >
-        <MaterialCommunityIcons name="plus" size={28} color="#fff" />
-      </TouchableOpacity> */}
-
-      {/* <Fab
-        showActions={showActions}
-        setShowFolderModal={setShowFolderModal}
-        setShowFilePicker={setShowFilePicker}
-        setShowActions={setShowActions}
-      /> */}
-
-      
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#007AFF" />
+        </View>
+      ) : (
+        viewMode === 'grid' ? 
+          <FlatList
+            data={displayEntries}
+            key="grid"
+            keyExtractor={(item) => item.id}
+            renderItem={renderFolderCardGrid}
+            contentContainerStyle={styles.gridContainer}
+            showsVerticalScrollIndicator={false}
+            numColumns={2}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialCommunityIcons name="folder-open-outline" size={64} color="#C7C7CC" />
+                <Text style={styles.emptyText}>No folders or files yet</Text>
+                <Text style={styles.emptySubtext}>Tap + to get started</Text>
+              </View>
+            }
+          /> :  
+          <FlatList
+            key="list"
+            data={displayEntries}
+            keyExtractor={(item) => item.id}
+            renderItem={renderFolderCard}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <MaterialCommunityIcons name="folder-open-outline" size={64} color="#C7C7CC" />
+                <Text style={styles.emptyText}>No folders or files yet</Text>
+                <Text style={styles.emptySubtext}>Tap + to get started</Text>
+              </View>
+            }
+          />
+      )}
 
       <Fab
         showActions={showActions}
@@ -546,7 +473,7 @@ const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
         onClose={() => setShowUploadModal(false)}
         onCamera={addFromCamera}
         onNewFolder={() => {
-          setShowFolderModal(true)
+          setShowFolderModal(true);
         }}
         onGallery={addFromGallery}
         onDocuments={addFromDocuments}
@@ -559,22 +486,6 @@ const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
           Alert.alert('Google Cloud', 'Google Cloud integration coming soon');
         }}
       />
-
-      {/* Add Document Modal */}
-   
-
-      {/* <FileOptionsModal
-        visible={showFileOptions}
-        file={selectedFile}
-        onClose={() => setShowFileOptions(false)}
-        options={fileOptions}
-      />
-
-      <HeaderOptionsMenu
-        visible={showHeaderMenu}
-        onClose={() => setShowHeaderMenu(false)}
-        options={headerMenuOptions}
-      /> */}
     </View>
   );
 }
@@ -582,257 +493,290 @@ const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: '#F8F9FA',
   },
 
   headerTitle: {
-
     fontSize: 20,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: '#202124',
   },
+  
   addButton: {
-    padding: 4,
+    padding: 12,
+    borderRadius: 8,
   },
-    thumbnail: {
+  
+  thumbnail: {
     width: '100%',
-    borderRadius:10,
-    borderBottomEndRadius:0,
-    borderBottomLeftRadius:0,
-    borderBottomRightRadius:0,
     height: '100%',
+    backgroundColor: '#F1F3F4',
   },
-   backButtonContainer: {
+  
+  backButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    flex: 1, // Take remaining space in header
+    flex: 1,
   },
-    backButton: {
-    padding: 8,
-   
-    // marginRight: 8,
+  
+  backButton: {
+    padding: 10,
+    marginRight: 4,
+    borderRadius: 8,
   },
+  
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
-    // backgroundColor: '#fff',
-    // borderBottomWidth: 8,
-    borderBottomColor: '#f5f5f5',
+    // paddingVertical: 15,
+    marginTop:15,
+    // backgroundColor: '#FFFFFF',
+    // marginBottom: 8,
   },
+  
   centerText: {
-textAlign:'center'
+    textAlign: 'center'
   },
 
-    previewContainer: {
+  previewContainer: {
     width: '100%',
-
-    aspectRatio: 1, // Square image area
-    // backgroundColor: '#E8E4F8',
+    aspectRatio: 1,
+    backgroundColor: '#F1F3F4',
+    overflow: 'hidden',
   },
-   folderCardGrid: {
-    // flex: 1,
-     width: '45%',
-    backgroundColor: '#fff',
+  
+  folderCardGrid: {
+    width: '47%',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     padding: 20,
-    textAlign:'center',
-    margin: 8,
+    margin: '1.5%',
     alignItems: 'center',
-    minHeight: 140,
-    elevation: 2,
-    shadowColor: '#0000003a',
+    minHeight: 100,
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 1,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-   fileCard: {
-    width: '45%',
-    backgroundColor: '#fff',
+  
+  fileCard: {
+    width: '47%',
+    backgroundColor: '#FFFFFF',
     borderRadius: 12,
     overflow: 'hidden',
-    // marginBottom: 16,
-    padding:4,
-     margin: 8,
-    shadowColor: '#0000003a',
-    shadowOffset: { width: 0, height: 2 },
+    // height:100,
+    margin: '1.5%',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
+    elevation: 1,
   },
 
   placeholderThumbnail: {
     width: '100%',
-    height: '80%',
+    height: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#E8E4F8',
+    backgroundColor: '#F1F3F4',
   },
+  
   previewText: {
-    fontSize: 13,
-    color: '#6b5cdb',
-    // marginTop: 4,
+    fontSize: 12,
+    color: '#5F6368',
+    marginTop: 8,
     textAlign: 'center',
   },
+  
   detailsButton: {
-    backgroundColor: '#6b5cdb',
-    paddingVertical: 8,
+    position:'absolute',
+    backgroundColor: colors.primary,
+    paddingVertical: 5,
+    bottom:0,
+    width:'100%',
     alignItems: 'center',
     justifyContent: 'center',
-    borderBottomLeftRadius:9,
-    borderBottomRightRadius:9,
   },
+  
   detailsButtonText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#fff',
+    color: '#FFFFFF',
   },
-viewMenuDropdown: {
-  position: 'absolute',
-  top: 60,
-  right: 16,
-  backgroundColor: '#fff',
-  borderRadius: 12,
-  padding: 8,
-  shadowColor: '#000',
-  shadowOffset: { width: 0, height: 2 },
-  shadowOpacity: 0.2,
-  shadowRadius: 8,
-  elevation: 5,
-  zIndex: 1000,
-},
-viewMenuItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  paddingHorizontal: 16,
-  paddingVertical: 12,
-  gap: 12,
-},
-viewMenuText: {
-  flex: 1,
-  fontSize: 15,
-  color: '#333',
-},
-
+  
+  viewMenuDropdown: {
+    position: 'absolute',
+    top: 68,
+    right: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 4,
+    minWidth: 180,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 12,
+    elevation: 8,
+    zIndex: 1000,
+  },
+  
+  viewMenuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    gap: 12,
+    borderRadius: 4,
+  },
+  
+  viewMenuText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#202124',
+  },
 
   avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 10,
-    backgroundColor: '#e8e4f8',
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    // backgroundColor: '#064392ff',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 12,
+    marginRight: 14,
   },
+  
   avatarText: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: '600',
-    color: colors.secondary,
+    color: '#FFFFFF',
   },
+  
   userName: {
     fontSize: 16,
-    color: colors.title,
-    fontWeight: '400',
+    color: '#202124',
+    fontWeight: '500',
   },
-    gridContainer: {
-    paddingHorizontal: 12,
+  
+  gridContainer: {
+    paddingHorizontal: 14,
     paddingTop: 16,
-    paddingBottom: 80,
-  },
-  listContent: {
-    paddingHorizontal: 20,
-    paddingTop: 12,
+   
     paddingBottom: 100,
   },
+  
+  listContent: {
+    paddingHorizontal: 16,
+    paddingTop: 18,
+    paddingBottom: 100,
+  },
+  
   folderCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 8,
-    marginBottom: 12,
-
-
+    backgroundColor: '#FFFFFF',
+    borderRadius: 8,
+    padding: 14,
+    marginBottom: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
  
- folderIconContainer: {
-    width: 54,
-    height: 54, 
-    borderRadius: 12,
-    // backgroundColor: '#6b5cdb',
+  folderIconContainer: {
+    width: 56,
+    height: 56, 
+    borderRadius: 28,
+    backgroundColor: '#E8F0FE',
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
   },
   
   folderIcon: {
-    width: 46,
-    height: 46,
-    /* Vector */
-
-    borderRadius: 9,
-
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#E8F0FE',
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 16,
+    marginRight: 14,
   },
+  
   folderInfo: {
     flex: 1,
   },
+  
   folderName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
-    marginBottom: -2,
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#202124',
+    marginBottom: 4,
   },
+  
   folderSubtitle: {
     fontSize: 13,
-    color: colors.primary,
-    fontWeight: '400',
-
+    color: '#5F6368',
   },
+  
   loadingContainer: {
     flex: 1,
-    // justifyContent: 'center',
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 200
   },
-  loadingText: {
-    fontSize: 16,
-    color: '#6b5cdb',
-    fontWeight: '500',
-  },
+  
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingTop: 100,
+    paddingTop: 120,
+    paddingHorizontal: 40,
   },
+  
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: '#5F6368',
+    fontWeight: '500',
+    marginTop: 20,
   },
+
+  emptySubtext: {
+    fontSize: 14,
+    color: '#80868B',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  
   fab: {
     position: 'absolute',
-    bottom: 24,
-    right: 24,
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: '#ff4d8f',
+    bottom: 28,
+    right: 28,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#1A73E8',
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff4d8f',
+    shadowColor: '#1A73E8',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
   },
 });

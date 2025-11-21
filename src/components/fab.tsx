@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import React from "react";
+import { colors } from "../style/global";
 
 interface FabProps {
   showActions: boolean;
@@ -8,6 +9,7 @@ interface FabProps {
 }
 
 export default function Fab({ showActions, setShowUploadModal, setShowActions }: FabProps) {
+  
   const handlePress = () => {
     setShowActions(false);
     setShowUploadModal(true);
@@ -37,10 +39,10 @@ const styles = StyleSheet.create({
     height: 60,
     borderRadius: 30,
 
-    backgroundColor: '#ff4d8f',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    shadowColor: '#ff4d8f',
+    shadowColor: colors.primary,
     shadowOpacity: 0.3,
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },

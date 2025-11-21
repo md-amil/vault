@@ -16,6 +16,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import GradientButton from './GradientButton';
 import Spacer from './Spacer';
 import { filesAPI } from '../api';
+import { colors } from '../style/global';
 
 interface fileDetailSchema {
   id:string
@@ -439,7 +440,7 @@ const styles = StyleSheet.create({
   },
   dropdownAddNewText: {
     fontSize: 14,
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '600',
   },
 });

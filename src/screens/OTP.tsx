@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   },
   actionLink: {
     fontSize: 14,
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '600',
   },
   actionDisabled: {

@@ -1,6 +1,7 @@
 import { Text, TouchableOpacity, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import React from 'react';
+import { colors } from '../style/global';
 
 type GradientButtonProps = {
   title?: string;
@@ -26,16 +27,16 @@ const styles = StyleSheet.create({
   },
   registerButton: {
     width: '100%',
-    paddingVertical: 16,
+    paddingVertical: 12,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: '#6b5cdb',
+    borderColor: colors.primary,
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
   },
   registerButtonText: {
-    color: '#6b5cdb',
+    color: colors.primary,
     fontSize: 16,
     fontWeight: '600',
   },

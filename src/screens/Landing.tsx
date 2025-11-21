@@ -3,6 +3,7 @@ import { StyleSheet, Text, View, ScrollView } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import GradientButton from '../components/GradientButton';
 import OutLineButton from '../components/OutLineButton';
+import { colors } from '../style/global';
 
 export default function LandingScreen({ navigation }: { navigation: any }) {
   return (
@@ -23,7 +24,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           <View style={styles.mainIconContainer}>
             <View style={styles.iconCircleBackground}>
               <View style={styles.iconCircle}>
-                <MaterialCommunityIcons name="folder-text" size={60} color="#7c5cdb" />
+                <MaterialCommunityIcons name="folder-text" size={60} color={colors.primary} />
               </View>
             </View>
           </View>
@@ -37,6 +38,7 @@ export default function LandingScreen({ navigation }: { navigation: any }) {
           <View style={styles.buttonGroup}>
             <GradientButton 
               title="Login" 
+              disabled={false}
               onPress={() => navigation.navigate('Login')} 
             />
             <OutLineButton 
@@ -71,7 +73,7 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     borderRadius: 12,
-    backgroundColor: '#6b5cdb',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -88,7 +90,7 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(124, 92, 219, 0.1)',
+    backgroundColor: colors.transparent,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -96,7 +98,7 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 65,
-    backgroundColor: 'rgba(124, 92, 219, 0.15)',
+    backgroundColor: colors.Secondtransparent,
     justifyContent: 'center',
     alignItems: 'center',
   },

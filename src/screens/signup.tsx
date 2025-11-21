@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Spacer from '../components/Spacer';
 import GradientButton from '../components/GradientButton';
+import { colors } from '../style/global';
 
 export default function SignupScreen({ navigation }: { navigation: any }) {
   const [firstName, setFirstName] = useState<string>('');
@@ -204,7 +205,7 @@ const styles = StyleSheet.create({
 
 
     link: {
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '600',
   },
  
@@ -220,7 +221,7 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontSize: 14,
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '600',
   },
 });

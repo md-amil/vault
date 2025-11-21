@@ -5,6 +5,7 @@ import { authAPI } from '../api/auth';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import GradientButton from '../components/GradientButton';
 import Spacer from '../components/Spacer';
+import { colors } from '../style/global';
 
 
 export default function LoginScreen({ navigation }: { navigation: any }) {
@@ -207,7 +208,7 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
    container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: colors.background
   },
 
   backButton: {
@@ -288,8 +289,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   checkboxChecked: {
-    backgroundColor: '#6b5cdb',
-    borderColor: '#6b5cdb',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   checkboxText: {
     flex: 1,
@@ -298,7 +299,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   link: {
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '600',
   },
  
@@ -314,7 +315,7 @@ const styles = StyleSheet.create({
   },
   registerLink: {
     fontSize: 14,
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '600',
   },
   screen: {

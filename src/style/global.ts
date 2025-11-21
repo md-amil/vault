@@ -1,4 +1,17 @@
 import { StyleSheet } from 'react-native';
+export const colors = {
+  primary: '#1A73E8',
+  secondary: '#6A3A9C',
+   Secondtransparent:'rgba(173, 198, 243, 1)',
+  transparent:'#E8F0FE',
+  title:'#2D3748',
+  text: '#000',
+  textSecondary: '#666',
+  border: '#E2E8F0',
+  background: '#F8FAFC',
+  placeholder: '#A0AEC0',
+};
+
 
 export const globalStyles = StyleSheet.create({
   // Typography
@@ -34,7 +47,7 @@ export const globalStyles = StyleSheet.create({
   
   // Links
   link: {
-    color: '#6b5cdb',
+    color: colors,
     fontWeight: '600',
   },
   
@@ -83,13 +96,3 @@ export const typography = {
   label: globalStyles.label,
 };
 
-export const colors = {
-  primary: '#667EEA',
-  secondary: '#6A3A9C',
-  title:'#2D3748',
-  text: '#000',
-  textSecondary: '#666',
-  border: '#E2E8F0',
-  background: '#F8FAFC',
-  placeholder: '#A0AEC0',
-};

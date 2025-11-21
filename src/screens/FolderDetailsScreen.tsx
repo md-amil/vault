@@ -12,7 +12,7 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { filesAPI } from '../api';
 import { File } from '../types';
-import { globalStyles } from '../style/global';
+import { colors, globalStyles } from '../style/global';
 import { Fab } from '../components';
 
 interface FolderDetailsScreenProps {
@@ -73,7 +73,7 @@ export default function FolderDetailsScreen({ route, navigation }: FolderDetails
           />
         ) : (
           <View style={styles.placeholderThumbnail}>
-            <MaterialCommunityIcons name="file-document" size={40} color="#6b5cdb" />
+            <MaterialCommunityIcons name="file-document" size={40} color={colors.primary} />
             <Text style={styles.previewText}>File Preview</Text>
             <Text style={styles.previewText}>Thumbnail</Text>
           </View>
@@ -110,7 +110,7 @@ export default function FolderDetailsScreen({ route, navigation }: FolderDetails
       {/* Content */}
       {loading ? (
         <View style={globalStyles.loadingContainer}>
-          <ActivityIndicator size="large" color="#6b5cdb" />
+          <ActivityIndicator size="large" color={colors.primary} />
           {/* <Text style={styles.loadingText}>Loading...</Text> */}
         </View>
       ) : (
@@ -209,12 +209,12 @@ const styles = StyleSheet.create({
   },
   previewText: {
     fontSize: 13,
-    color: '#6b5cdb',
+    color: colors.primary,
     marginTop: 4,
     textAlign: 'center',
   },
   detailsButton: {
-    backgroundColor: '#6b5cdb',
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     alignItems: 'center',
     justifyContent: 'center',
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
 
   loadingText: {
     fontSize: 16,
-    color: '#6b5cdb',
+    color: colors.primary,
     fontWeight: '500',
   },
   emptyContainer: {

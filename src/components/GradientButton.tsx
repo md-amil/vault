@@ -1,9 +1,10 @@
 import React from 'react';
 import { Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { colors } from '../style/global';
 
 type GradientButtonProps = {
-  title?: string;
+  title?: string | React.ReactNode;
   onPress?: () => void;
   disabled?: boolean;
   loading?: boolean;
@@ -15,7 +16,7 @@ export default function GradientButton({
   onPress, 
   disabled = false,
   loading = false,
-  colors = ['#667EEA', '#764BA2']
+  colors: buttonColors = [colors.primary, colors.primary]
 }: GradientButtonProps) {
   return (
     <TouchableOpacity
@@ -25,15 +26,19 @@ export default function GradientButton({
       disabled={disabled || loading}
     >
       <LinearGradient
-        colors={disabled ? ['#9b7fe0', '#9b7fe0'] : colors}
+        colors={disabled ? [colors.Secondtransparent, colors.Secondtransparent] : buttonColors}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        style={styles.button}
+        style={[styles.button, styles.disabledWrapper]}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color="#fff" size="small" />
         ) : (
-          <Text style={styles.text}>{title}</Text>
+          typeof title === 'string' ? (
+            <Text style={styles.text}>{title}</Text>
+          ) : (
+            title
+          )
         )}
       </LinearGradient>
     </TouchableOpacity>
@@ -43,20 +48,32 @@ export default function GradientButton({
 const styles = StyleSheet.create({
   wrapper: {
     width: '100%',
-    marginTop: 20,
+    borderRadius: 8,
+    overflow: 'hidden',
+    shadowColor: '#1A73E8',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
   disabledWrapper: {
-    opacity: 0.6,
+    // opacity: 0.5,
+    shadowOpacity: 0,
+    elevation: 0,
   },
   button: {
-    paddingVertical: 16,
-    borderRadius: 10,
+    paddingVertical: 14,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+    flexDirection: 'row',
   },
   text: {
-    color: '#fff',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontSize: 15,
     fontWeight: '600',
   },
 });

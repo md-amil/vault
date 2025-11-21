@@ -11,41 +11,21 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-// import { RootStackParamList } from '../types/navigation';
 import { filesAPI } from '../api';
 import Spacer from '../components/Spacer';
 import { RootStackParamList } from '../types';
-import { globalStyles } from '../style/global';
+import { colors, globalStyles } from '../style/global';
 import GradientButton from '../components/GradientButton';
 import OutLineButton from '../components/OutLineButton';
 import AddDocumentModal from '../components/AddDocumentModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 type Props = NativeStackScreenProps<RootStackParamList, 'FileDetails'>;
 
 export default function FileDetailsScreen({ route, navigation }: Props) {
- const { file } = route.params;
-  
-  // const [file, setFile] = useState<File>(initialFile as File);
-
-
- 
-  // const fetchFileDetails = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const fileDetails = await filesAPI.getById(initialFile.id);
-  //     console.log('File details:', fileDetails);
-  //     setFile(fileDetails);
-  //   } catch (error) {
-  //     console.error('Error fetching file details:', error);
-  //     Alert.alert('Error', 'Failed to load file details');
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
-const [loading, setLoading] = useState(false);
+  const { file } = route.params;
+  const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   React.useEffect(() => {
     navigation.setOptions({
@@ -53,27 +33,18 @@ const [loading, setLoading] = useState(false);
     });
   }, [navigation]);
 
- const handleDownload = async () => {
+  const handleDownload = async () => {
     try {
       setLoading(true);
-      
-      // Get auth token
       const token = await AsyncStorage.getItem('access_token');
-      
-      // Get download URL
       const downloadUrl = filesAPI.getDownloadUrl(file.id);
-      
-      // Add token to URL as query param (if your API supports it)
       const downloadUrlWithAuth = `${downloadUrl}?token=${token}`;
-      
-      // Open download URL
       const canOpen = await Linking.canOpenURL(downloadUrlWithAuth);
       
       if (canOpen) {
         await Linking.openURL(downloadUrlWithAuth);
         Alert.alert('Success', 'Download started');
       } else {
-        // Fallback: use s3Url if available
         if (file.s3Url) {
           await Linking.openURL(file.s3Url);
         } else {
@@ -87,7 +58,6 @@ const [loading, setLoading] = useState(false);
       setLoading(false);
     }
   };
-
 
   const handleShare = () => {
     Alert.alert('Share File', 'Share functionality coming soon');
@@ -114,11 +84,7 @@ const [loading, setLoading] = useState(false);
             try {
               await filesAPI.delete(file.id);
               Alert.alert('Success', 'File deleted successfully');
-              
-                                   navigation.goBack();
-
-
-              // navigation.goBack();
+              navigation.goBack();
             } catch (error) {
               Alert.alert('Error', 'Failed to delete file');
             }
@@ -150,23 +116,19 @@ const [loading, setLoading] = useState(false);
     return extension ? `${extension} Document` : 'Document';
   };
 
-
-  const resisterPreview = () => {
-    console.log('hellow')
-  }
   return (
-    <View style={globalStyles.container}>
+    <View style={styles.container}>
       {/* Header */}
       <View style={globalStyles.Pageheader}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
           style={styles.backButton}
         >
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
+          <MaterialCommunityIcons name="arrow-left" size={24} color="#202124" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>File Details </Text>
+        <Text style={styles.headerTitle}>File Details</Text>
         <TouchableOpacity style={styles.menuButton}>
-          <MaterialCommunityIcons name="dots-vertical" size={24} color="#333" />
+          <MaterialCommunityIcons name="dots-vertical" size={24} color="#202124" />
         </TouchableOpacity>
       </View>
 
@@ -178,15 +140,15 @@ const [loading, setLoading] = useState(false);
         {/* File Info Card */}
         <View style={styles.infoCard}>
           <View style={styles.infoRow}>
-  <Text style={styles.infoLabel}>File Name</Text>
-  <Text 
-    style={styles.infoValue}
-    numberOfLines={2}
-    ellipsizeMode="tail"
-  >
-    {file.name}
-  </Text>
-</View>
+            <Text style={styles.infoLabel}>File Name</Text>
+            <Text 
+              style={styles.infoValue}
+              numberOfLines={2}
+              ellipsizeMode="tail"
+            >
+              {file.name}
+            </Text>
+          </View>
 
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>File Size</Text>
@@ -210,26 +172,25 @@ const [loading, setLoading] = useState(false);
 
         <Spacer height={24} />
 
-        {/* Download Button */}
+        {/* Register Product Button */}
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => setShowAddDocumentModal(true)}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="file-document-edit-outline" size={20} color="#FFFFFF" />
+          <Text style={styles.primaryButtonText}>Register Product</Text>
+        </TouchableOpacity>
 
-           <GradientButton
-                  title={<> <MaterialCommunityIcons name="eye" size={20} color="#fff" />
-            <Text style={styles.downloadButtonText}>{" "} Register Product</Text></>}
-                  onPress={()=> setShowAddDocumentModal(true)}
-                
-            />
- 
- 
-        <Spacer height={16} />
+        <Spacer height={12} />
 
         {/* Share File */}
-   
         <TouchableOpacity
           style={styles.actionButton}
-         
+          onPress={handleShare}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="share-variant" size={20} color="#6b5cdb" />
+          <MaterialCommunityIcons name="share-variant-outline" size={20} color="#5F6368" />
           <Text style={styles.actionButtonText}>Share File</Text>
         </TouchableOpacity>
 
@@ -241,7 +202,7 @@ const [loading, setLoading] = useState(false);
           onPress={handleCreateLink}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="link-variant" size={20} color="#6b5cdb" />
+          <MaterialCommunityIcons name="link-variant" size={20} color="#5F6368" />
           <Text style={styles.actionButtonText}>Create Link</Text>
         </TouchableOpacity>
 
@@ -253,18 +214,20 @@ const [loading, setLoading] = useState(false);
           onPress={handleMakeCopy}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="content-copy" size={20} color="#6b5cdb" />
+          <MaterialCommunityIcons name="content-copy" size={20} color="#5F6368" />
           <Text style={styles.actionButtonText}>Make a Copy</Text>
         </TouchableOpacity>
 
         <Spacer height={12} />
-          <TouchableOpacity
+
+        {/* Download */}
+        <TouchableOpacity
           style={styles.actionButton}
           onPress={handleDownload}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="download" size={20} color="#6b5cdb" />
-          <Text style={styles.actionButtonText}>Downaload Preview</Text>
+          <MaterialCommunityIcons name="download-outline" size={20} color="#5F6368" />
+          <Text style={styles.actionButtonText}>Download Preview</Text>
         </TouchableOpacity>
 
         <Spacer height={24} />
@@ -275,162 +238,169 @@ const [loading, setLoading] = useState(false);
           onPress={handleDelete}
           activeOpacity={0.7}
         >
-          <MaterialCommunityIcons name="delete" size={20} color="#fff" />
+          <MaterialCommunityIcons name="delete-outline" size={20} color="#fff" />
           <Text style={styles.deleteButtonText}>Delete File</Text>
         </TouchableOpacity>
-
-        
 
         <Spacer height={40} />
       </ScrollView>
 
-         <AddDocumentModal
-              visible={showAddDocumentModal}
-              onClose={() => setShowAddDocumentModal(false)}
-              fileId={file.id}
-              onSave={async (data) => {
-                try {
-                  setLoading(true);
-      
-                 
-                console.log(data,'checking data which data ')
-      
+      <AddDocumentModal
+        visible={showAddDocumentModal}
+        onClose={() => setShowAddDocumentModal(false)}
+        fileId={file.id}
+        onSave={async (data) => {
+          try {
+            setLoading(true);
+            const fileData = {
+              name: data.fileName,
+              tag: data.tagName,
+              category: data.category,
+              remarks: data.remarks,
+              fileId: file.id, 
+            };
 
-                  const fileData = {
-                    name: data.fileName,
-                    tag: data.tagName,
-                    category: data.category,
-                    remarks: data.remarks,
-                    fileId: file.id, 
-                  };
-      
-                  if(data?.updateId) {
-                    await filesAPI.updateDocument(data?.updateId, fileData);
-                  }else {
-                  await filesAPI.createDocument(fileData);
-      
-                  }
-                
-                  setShowAddDocumentModal(false);
-                  Alert.alert('Success', 'Document saved successfully');
-                 setLoading(false);
-                  return   true
-                 
-                } catch (error: any) {
-                  console.error('Save document error:', error);
-                  Alert.alert(
-                    'Error',
-                    error.response?.data?.message || 'Failed to save document details'
-                  );
-                } finally {
-                  setLoading(false);
-                }
-              }}
-            />
+            if(data?.updateId) {
+              await filesAPI.updateDocument(data?.updateId, fileData);
+            } else {
+              await filesAPI.createDocument(fileData);
+            }
+          
+            setShowAddDocumentModal(false);
+            Alert.alert('Success', 'Document saved successfully');
+            setLoading(false);
+            return true;
+          } catch (error: any) {
+            console.error('Save document error:', error);
+            Alert.alert(
+              'Error',
+              error.response?.data?.message || 'Failed to save document details'
+            );
+          } finally {
+            setLoading(false);
+          }
+        }}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-
+  container: {
+    flex: 1,
+    backgroundColor: '#F8F9FA',
+  },
   backButton: {
-    padding: 4,
+    padding: 10,
+    borderRadius: 8,
   },
   headerTitle: {
-    fontSize: 18,
+    fontSize: 20,
     fontWeight: '600',
-    color: '#333',
+    color: '#202124',
   },
   menuButton: {
-    padding: 4,
+    padding: 10,
+    borderRadius: 8,
   },
   scrollView: {
     flex: 1,
   },
   content: {
-    padding: 24,
-  },
-   infoValue: {
-    fontSize: 15,
-    color: '#1a1a1a',
-    fontWeight: '500',
-    width: '70%', 
-    textAlign: 'right',
+    padding: 20,
   },
   infoCard: {
-    position:'relative',
-  
-    backgroundColor: '#fff',
-    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
     padding: 20,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 2 },
-    // shadowOpacity: 0.05,
-    // shadowRadius: 4,
-    // elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 16,
+    paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    borderBottomColor: '#F1F3F4',
   },
   lastInfoRow: {
     borderBottomWidth: 0,
   },
   infoLabel: {
     fontSize: 14,
-    color: '#9b9bb5',
-    fontWeight: '400',
+    color: '#5F6368',
+    fontWeight: '500',
   },
-
-  downloadButton: {
-    borderRadius: 12,
-    overflow: 'hidden',
+  infoValue: {
+    fontSize: 14,
+    color: '#202124',
+    fontWeight: '500',
+    maxWidth: '60%',
+    textAlign: 'right',
   },
-  gradientButton: {
+  primaryButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
     gap: 8,
+    shadowColor: '#1A73E8',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  downloadButtonText: {
-    fontSize: 16,
+  primaryButtonText: {
+    fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
-    marginLeft:20
+    color: '#FFFFFF',
   },
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 13,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#6b5cdb',
-    backgroundColor: '#fff',
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
     gap: 8,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.04,
+    shadowRadius: 2,
+    elevation: 1,
   },
   actionButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#6b5cdb',
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#202124',
   },
   deleteButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 16,
-    borderRadius: 12,
-    backgroundColor: '#ef4444',
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: '#DC3545',
     gap: 8,
   },
   deleteButtonText: {
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '600',
-    color: '#fff',
+    color: '#FFFFFF',
   },
 });

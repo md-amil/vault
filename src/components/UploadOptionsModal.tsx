@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Spacer from './Spacer';
+import { colors } from '../style/global';
 
 interface UploadOptionsModalProps {
   visible: boolean;
@@ -70,7 +71,7 @@ export default function UploadOptionsModal({
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="camera" size={40} color="#6b5cdb" />
+                  <MaterialCommunityIcons name="camera" size={30} color={colors.primary} />
                 </View>
                 <Text style={styles.cardLabel}>Camera</Text>
               </TouchableOpacity>
@@ -82,7 +83,7 @@ export default function UploadOptionsModal({
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="folder-plus" size={40} color="#6b5cdb" />
+                  <MaterialCommunityIcons name="folder-plus" size={30} color={colors.primary} />
                 </View>
                 <Text style={styles.cardLabel}>New Folder</Text>
               </TouchableOpacity>
@@ -94,7 +95,7 @@ export default function UploadOptionsModal({
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="image" size={40} color="#6b5cdb" />
+                  <MaterialCommunityIcons name="image" size={30} color={colors.primary} />
                 </View>
                 <Text style={styles.cardLabel}>Gallery</Text>
               </TouchableOpacity>
@@ -106,7 +107,7 @@ export default function UploadOptionsModal({
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="file-document" size={40} color="#6b5cdb" />
+                  <MaterialCommunityIcons name="file-document" size={30} color={colors.primary} />
                 </View>
                 <Text style={styles.cardLabel}>Documents</Text>
               </TouchableOpacity>
@@ -118,7 +119,7 @@ export default function UploadOptionsModal({
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="cloud-download" size={40} color="#6b5cdb" />
+                  <MaterialCommunityIcons name="cloud-download" size={30} color={colors.primary} />
                 </View>
                 <Text style={styles.cardLabel}>iCloud</Text>
               </TouchableOpacity>
@@ -130,7 +131,7 @@ export default function UploadOptionsModal({
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
-                  <MaterialCommunityIcons name="google-drive" size={40} color="#6b5cdb" />
+                  <MaterialCommunityIcons name="google-drive" size={30} color={colors.primary}/>
                 </View>
                 <Text style={styles.cardLabel}>Google Cloud</Text>
               </TouchableOpacity>
@@ -144,7 +145,7 @@ export default function UploadOptionsModal({
                 onPress={onClose}
                 activeOpacity={0.7}
                 >
-                <MaterialCommunityIcons name="close" size={24} color="#ff4d8f" />
+                <MaterialCommunityIcons name="close" size={24} color="red" />
                 <Text style={styles.cancelButtonText}>Cancel</Text>
                 </TouchableOpacity>
 
@@ -165,14 +166,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 12,
     borderWidth: 2,
-    borderColor: '#ff4d8f',
+    borderColor: '#DC3545',
     backgroundColor: '#fff',
     gap: 8,
   },
   cancelButtonText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#ff4d8f',
+    color: '#DC3545',
   },
   overlay: {
     flex: 1,
@@ -183,7 +184,7 @@ const styles = StyleSheet.create({
   container: {
     width: width - 20,
     maxHeight: '100%',
-    backgroundColor: '#fff',
+    backgroundColor:colors.background,
     borderRadius: 20,
     overflow: 'hidden',
   },
@@ -232,7 +233,7 @@ const styles = StyleSheet.create({
   card: {
     width: cardWidth,
     aspectRatio: 1,
-    backgroundColor: '#f8f9fb',
+    backgroundColor:'#fff',
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -240,14 +241,14 @@ const styles = StyleSheet.create({
   },
   cancelCard: {
     borderWidth: 2,
-    borderColor: '#ff4d8f',
+    borderColor: colors.primary,
     backgroundColor: '#fff',
   },
   iconContainer: {
     width: 64,
     height: 64,
-    borderRadius: 12,
-    backgroundColor: '#e8e4f8',
+    borderRadius: 40,
+    backgroundColor: colors.transparent,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 12,
