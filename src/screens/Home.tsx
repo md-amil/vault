@@ -359,7 +359,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           )}
           
           <Text style={styles.headerTitle}>
-            {stack.length > 0 ? current.name : 'My File Vault'}
+            {stack.length > 0 ? current.name : 'My Documents'}
           </Text>
         </View>
 
