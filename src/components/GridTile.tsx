@@ -1,10 +1,10 @@
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity } from 'react-native';
-import { Entry,File, Folder } from '../types';
+import { Entry,IFile, Folder } from '../types';
 
 type GridTileProps = {
-  item: File|Folder;
-  onOpen: (item: File|Folder) => void;
+  item: IFile|Folder;
+  onOpen: (item: IFile|Folder) => void;
 };
 
 export default function GridTile({ item, onOpen }: GridTileProps) {

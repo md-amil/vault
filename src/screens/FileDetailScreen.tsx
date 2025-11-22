@@ -7,13 +7,14 @@ import {
   Alert,
   ScrollView,
   Linking,
+  Share,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import LinearGradient from 'react-native-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { filesAPI } from '../api';
 import Spacer from '../components/Spacer';
-import { RootStackParamList } from '../types';
+import { IFile, RootStackParamList } from '../types';
 import { colors, globalStyles } from '../style/global';
 import GradientButton from '../components/GradientButton';
 import OutLineButton from '../components/OutLineButton';
@@ -59,8 +60,30 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
     }
   };
 
-  const handleShare = () => {
-    Alert.alert('Share File', 'Share functionality coming soon');
+  const handleShare = async (file:IFile) => {
+     try {
+      const result = await Share.share({
+        message:'https://vault-api-lyk2.onrender.com/files/'+file.id
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error:any) {
+      Alert.alert(error.message);
+    }
+  //    const supported = await Linking.canOpenURL(file.s3Url!);
+
+  //   if (supported) {
+  //     await Linking.openURL(file.s3Url!);
+  //   } else {
+  //     Alert.alert(`Don't know how to open this URL: ${file.s3Url!}`);
+  //   }
   };
 
   const handleCreateLink = () => {
@@ -166,7 +189,7 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
 
           <View style={[styles.infoRow, styles.lastInfoRow]}>
             <Text style={styles.infoLabel}>File Type</Text>
-            <Text style={styles.infoValue}>{getFileType(file?.name)}</Text>
+            <Text style={styles.infoValue}>{getFileType(file.name!)}</Text>
           </View>
         </View>
 
@@ -187,7 +210,7 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
         {/* Share File */}
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={handleShare}
+          onPress={()=>handleShare(file as IFile)}
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons name="share-variant-outline" size={20} color="#5F6368" />

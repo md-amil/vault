@@ -3,7 +3,7 @@ import { Alert, BackHandler, FlatList, StyleSheet, Text, ActivityIndicator, Touc
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
-import { File, Folder } from '../types';
+import { File, Folder, IFile } from '../types';
 import { Image } from 'react-native';
 import {
   Fab,
@@ -142,9 +142,9 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     });
   }, [navigation]);
 
-  async function open(item: File | Folder) {
+  async function open(item: IFile | Folder) {
     if ('path' in item) {
-      setSelectedFile(item as File);
+      setSelectedFile(item as IFile);
       setShowFileOptions(true);
       navigation.navigate('FileDetails', { 
         file: item as File 
@@ -257,7 +257,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     );
   }
 
-  const getItemSubtitle = (item: File | Folder) => {
+  const getItemSubtitle = (item: IFile | Folder) => {
     if ('path' in item) {
       return 'File';
     }
@@ -274,7 +274,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
   };
 
-  const renderFolderCardGrid = ({ item }: { item: File | Folder }) => {
+  const renderFolderCardGrid = ({ item }: { item: IFile | Folder }) => {
     if ('path' in item) {
       return (
         <View style={styles.fileCard}>
@@ -329,7 +329,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     );
   };
 
-  const renderFolderCard = ({ item }: { item: File | Folder }) => (
+  const renderFolderCard = ({ item }: { item: IFile | Folder }) => (
     <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
       <View style={styles.folderIcon}>
         {getItemSubtitle(item) === 'File' ? 

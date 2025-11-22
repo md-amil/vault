@@ -11,7 +11,7 @@ export type Folder = {
   name: string;
   parent: Folder | null;
   children: Folder[];
-  files: File[];
+  files: IFile[];
   createdAt: string;
   updatedAt: string;
 };
@@ -47,7 +47,7 @@ export type RootStackParamList = {
   } | undefined;
 };
 
-export type File = {
+export type IFile = {
    id: string;
   name: string;
   path?: string;

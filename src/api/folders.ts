@@ -9,7 +9,8 @@ export const foldersAPI = {
   getTree: async () => {
     try {
       const response = await api.get('/folders');
-      return response.data;
+      console.log(response)
+      return response?.data||[];
     } catch (error:any) {
       console.log(error.response.data)
       throw error;

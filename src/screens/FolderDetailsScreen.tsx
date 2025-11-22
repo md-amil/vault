@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { filesAPI } from '../api';
-import { File } from '../types';
+import {  IFile } from '../types';
 import { colors, globalStyles } from '../style/global';
 import { Fab } from '../components';
 
@@ -57,11 +57,11 @@ export default function FolderDetailsScreen({ route, navigation }: FolderDetails
     }
   };
 
-  const handleFileDetails = (file: File) => {
+  const handleFileDetails = (file: IFile) => {
     navigation.navigate('FileDetails', { file });
   };
 
-  const renderFileCard = ({ item }: { item: File }) => (
+  const renderFileCard = ({ item }: { item: IFile }) => (
     <View style={styles.fileCard}>
       {/* File Preview/Thumbnail */}
       <View style={styles.previewContainer}>
