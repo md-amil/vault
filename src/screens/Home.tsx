@@ -3,20 +3,18 @@ import { Alert, BackHandler, FlatList, StyleSheet, Text, ActivityIndicator, Touc
 import { launchCamera, launchImageLibrary, Asset } from 'react-native-image-picker';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useAuth } from '../contexts/AuthContext';
-import { File, Folder, IFile } from '../types';
+import { Folder, IFile } from '../types';
 import { Image } from 'react-native';
+import { pick, types } from '@react-native-documents/picker'
+
 import {
   Fab,
   CreateFolderModal,
   FilePickerModal,
-  FileOptionsModal,
-  HeaderOptionsMenu,
 } from '../components';
 import { foldersAPI, filesAPI } from '../api';
 import { colors, globalStyles } from '../style/global';
-import LinearGradient from 'react-native-linear-gradient';
 import UploadOptionsModal from '../components/UploadOptionsModal';
-import AddDocumentModal from '../components/AddDocumentModal';
 import { useFocusEffect } from '@react-navigation/native';
 
 export default function HomeScreen({ navigation, route }: { navigation: any, route: any }) {
@@ -40,8 +38,9 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
   const [newFolderName, setNewFolderName] = useState<string>('');
   const [showFilePicker, setShowFilePicker] = useState<boolean>(false);
   const [showFileOptions, setShowFileOptions] = useState<boolean>(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<IFile | null>(null);
   const [showHeaderMenu, setShowHeaderMenu] = useState<boolean>(false);
+  const [picking, setIsPicking] = useState(false)
   const current = stack.length === 0 ? root : stack[stack.length - 1];
 
   const displayEntries = useMemo(() => [...(current.children || []), ...(current.files || [])], [current.children, current.files]);
@@ -117,7 +116,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           try {
             const currentFolder = stack[stack.length - 1];
             const files = await filesAPI.getByFolder(currentFolder.id);
-            
+
             setStack((s) =>
               s.map((folder, index) => {
                 if (index !== s.length - 1) return folder;
@@ -131,7 +130,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           fetchFolderData();
         }
       };
-      
+
       refreshCurrentFolder();
     }, [stack.length])
   );
@@ -146,8 +145,8 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     if ('path' in item) {
       setSelectedFile(item as IFile);
       setShowFileOptions(true);
-      navigation.navigate('FileDetails', { 
-        file: item as File 
+      navigation.navigate('FileDetails', {
+        file: item as IFile
       });
       return;
     }
@@ -232,10 +231,10 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
 
   async function addFromGallery() {
     try {
-      const res = await launchImageLibrary({ 
+      const res = await launchImageLibrary({
         mediaType: 'mixed',
-        selectionLimit: 0, 
-        quality: 0.8 
+        selectionLimit: 0,
+        quality: 0.8
       });
       if (res.didCancel) return;
       pushPickedAssets(res.assets);
@@ -247,14 +246,55 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
   }
 
   async function addFromDocuments() {
-    Alert.alert(
-      'Documents Feature',
-      'To pick PDF and ZIP files, we recommend:\n\n1. Use the Gallery option for images\n2. For PDFs/ZIPs, you can:\n   - Take a photo of the document\n   - Or we can add a compatible document picker library',
-      [
-        { text: 'Use Gallery', onPress: () => addFromGallery() },
-        { text: 'Cancel', style: 'cancel' }
-      ]
-    );
+    if (picking) return console.log("already progress"); // Prevent multiple calls
+    setIsPicking(true);
+      setShowUploadModal(false);
+
+    try {
+      const result = await pick({
+        type: [types.pdf, types.images, types.csv, types.docx],
+        allowMultiSelection: false, // Set to true if you want multiple files
+      });
+
+
+      const file = result[0];
+      const fileName = file.name || file.uri.split('/').pop() || 'file';
+      const formData = new FormData();
+      formData.append('file', {
+        uri: file.uri,
+        type: file.type || 'application/octet-stream',
+        name: fileName,
+      } as any);
+
+      formData.append('name', fileName);
+      formData.append('folderId', current.id);
+
+      const uploadedFile = await filesAPI.upload(formData);
+      if (stack.length === 0) {
+        return setRoot((r) => updateChild(r, uploadedFile, 'files'));
+      }
+      setStack((s) => s.map((folder, index) => {
+        if (index !== s.length - 1) return folder;
+        return updateChild(folder, uploadedFile, 'files');
+      }));
+      console.log('Upload successful:', uploadedFile);
+    } catch (err: any) {
+
+      if (err.message === 'User canceled document picker') {
+        console.log('User cancelled file selection');
+      } else {
+        console.error('Upload error:', err);
+      }
+      console.log(err)
+      Alert.alert("error", "Error while uploading")
+    } finally {
+      setIsPicking(false);
+      setShowFolderModal(false);
+      setShowActions(false);
+      setShowFilePicker(false);
+      setShowActions(false);
+
+    }
   }
 
   const getItemSubtitle = (item: IFile | Folder) => {
@@ -278,7 +318,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     if ('path' in item) {
       return (
         <View style={styles.fileCard}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.previewContainer}
             onPress={() => open(item)}
             activeOpacity={0.7}
@@ -308,15 +348,15 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
 
     return (
-      <TouchableOpacity 
-        style={styles.folderCardGrid} 
-        onPress={() => open(item)} 
+      <TouchableOpacity
+        style={styles.folderCardGrid}
+        onPress={() => open(item)}
         activeOpacity={0.7}
       >
         <View style={styles.folderIconContainer}>
           <MaterialCommunityIcons name="folder" size={32} color="#FFFFFF" />
         </View>
-        
+
         <View style={styles.folderInfo}>
           <Text style={[styles.folderName, styles.centerText]} numberOfLines={1}>
             {item.name}
@@ -332,12 +372,12 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
   const renderFolderCard = ({ item }: { item: IFile | Folder }) => (
     <TouchableOpacity style={styles.folderCard} onPress={() => open(item)} activeOpacity={0.7}>
       <View style={styles.folderIcon}>
-        {getItemSubtitle(item) === 'File' ? 
-          <MaterialCommunityIcons name="file-document-outline" size={26} color="#FFFFFF" /> : 
+        {getItemSubtitle(item) === 'File' ?
+          <MaterialCommunityIcons name="file-document-outline" size={26} color="#FFFFFF" /> :
           <MaterialCommunityIcons name="folder" size={26} color="#FFFFFF" />
-        } 
+        }
       </View>
-      
+
       <View style={styles.folderInfo}>
         <Text style={styles.folderName}>{item.name}</Text>
         <Text style={styles.folderSubtitle}>{getItemSubtitle(item)}</Text>
@@ -350,21 +390,21 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
       <View style={globalStyles.Pageheader}>
         <View style={styles.backButtonContainer}>
           {stack.length > 0 && (
-            <TouchableOpacity 
-              onPress={goUp} 
+            <TouchableOpacity
+              onPress={goUp}
               style={styles.backButton}
             >
               <MaterialCommunityIcons name="arrow-left" size={24} color="#1A1A1A" />
             </TouchableOpacity>
           )}
-          
+
           <Text style={styles.headerTitle}>
             {stack.length > 0 ? current.name : 'My Documents'}
           </Text>
         </View>
 
-        <TouchableOpacity 
-          onPress={() => setShowViewMenu(!showViewMenu)} 
+        <TouchableOpacity
+          onPress={() => setShowViewMenu(!showViewMenu)}
           style={styles.addButton}
         >
           <MaterialCommunityIcons name="dots-vertical" size={24} color="#1A1A1A" />
@@ -383,7 +423,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
               <Text style={styles.viewMenuText}>Grid View</Text>
               {viewMode === 'grid' && <MaterialCommunityIcons name="check" size={20} color="#007AFF" />}
             </TouchableOpacity>
-            
+
             <TouchableOpacity
               style={styles.viewMenuItem}
               onPress={() => {
@@ -413,7 +453,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           <ActivityIndicator size="large" color="#007AFF" />
         </View>
       ) : (
-        viewMode === 'grid' ? 
+        viewMode === 'grid' ?
           <FlatList
             data={displayEntries}
             key="grid"
@@ -429,7 +469,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
                 <Text style={styles.emptySubtext}>Tap + to get started</Text>
               </View>
             }
-          /> :  
+          /> :
           <FlatList
             key="list"
             data={displayEntries}
@@ -501,40 +541,40 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#202124',
   },
-  
+
   addButton: {
     padding: 12,
     borderRadius: 8,
   },
-  
+
   thumbnail: {
     width: '100%',
     height: '100%',
     backgroundColor: '#F1F3F4',
   },
-  
+
   backButtonContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     flex: 1,
   },
-  
+
   backButton: {
     padding: 10,
     marginRight: 4,
     borderRadius: 8,
   },
-  
+
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
     // paddingVertical: 15,
-    marginTop:15,
+    marginTop: 15,
     // backgroundColor: '#FFFFFF',
     // marginBottom: 8,
   },
-  
+
   centerText: {
     textAlign: 'center'
   },
@@ -545,7 +585,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F3F4',
     overflow: 'hidden',
   },
-  
+
   folderCardGrid: {
     width: '47%',
     backgroundColor: '#FFFFFF',
@@ -563,7 +603,7 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
-  
+
   fileCard: {
     width: '47%',
     backgroundColor: '#FFFFFF',
@@ -588,30 +628,30 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: '#F1F3F4',
   },
-  
+
   previewText: {
     fontSize: 12,
     color: '#5F6368',
     marginTop: 8,
     textAlign: 'center',
   },
-  
+
   detailsButton: {
-    position:'absolute',
+    position: 'absolute',
     backgroundColor: colors.primary,
     paddingVertical: 5,
-    bottom:0,
-    width:'100%',
+    bottom: 0,
+    width: '100%',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   detailsButtonText: {
     fontSize: 14,
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  
+
   viewMenuDropdown: {
     position: 'absolute',
     top: 68,
@@ -627,7 +667,7 @@ const styles = StyleSheet.create({
     elevation: 8,
     zIndex: 1000,
   },
-  
+
   viewMenuItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -636,7 +676,7 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 4,
   },
-  
+
   viewMenuText: {
     flex: 1,
     fontSize: 14,
@@ -653,32 +693,32 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  
+
   avatarText: {
     fontSize: 16,
     fontWeight: '600',
     color: '#FFFFFF',
   },
-  
+
   userName: {
     fontSize: 16,
     color: '#202124',
     fontWeight: '500',
   },
-  
+
   gridContainer: {
     paddingHorizontal: 14,
     paddingTop: 16,
-   
+
     paddingBottom: 100,
   },
-  
+
   listContent: {
     paddingHorizontal: 16,
     paddingTop: 18,
     paddingBottom: 100,
   },
-  
+
   folderCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -695,17 +735,17 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
- 
+
   folderIconContainer: {
     width: 56,
-    height: 56, 
+    height: 56,
     borderRadius: 28,
     backgroundColor: '#E8F0FE',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 14,
   },
-  
+
   folderIcon: {
     width: 48,
     height: 48,
@@ -715,29 +755,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 14,
   },
-  
+
   folderInfo: {
     flex: 1,
   },
-  
+
   folderName: {
     fontSize: 15,
     fontWeight: '500',
     color: '#202124',
     marginBottom: 4,
   },
-  
+
   folderSubtitle: {
     fontSize: 13,
     color: '#5F6368',
   },
-  
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  
+
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -745,7 +785,7 @@ const styles = StyleSheet.create({
     paddingTop: 120,
     paddingHorizontal: 40,
   },
-  
+
   emptyText: {
     fontSize: 16,
     color: '#5F6368',
@@ -759,7 +799,7 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
-  
+
   fab: {
     position: 'absolute',
     bottom: 28,
