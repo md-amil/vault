@@ -19,6 +19,7 @@ import OTP from './src/screens/OTP';
 import Loading from './src/screens/Loading';
 import RegisterProduct from './src/screens/RegisterProduct';
 import FileDetailsScreen from './src/screens/FileDetailScreen';
+import ImagePreviewScreen from './src/screens/ImagePreviewScreen';
 export type RootStackParamList = {
   Landing: undefined;
   Login: undefined;
@@ -26,6 +27,7 @@ export type RootStackParamList = {
   Home: undefined;
   FileDetails:undefined;
   RegisterProduct: { file?: any } | undefined;
+  ImagePreview: { file?: any } | undefined;
   OTP: { phone?: string; countryCode?: string } | undefined;
   Loading: undefined;
 };
@@ -51,6 +53,14 @@ function AppNavigator() {
         <Stack.Screen name="Login" component={Login} />
         <Stack.Screen name="Signup" component={Signup} />
           <Stack.Screen name="FileDetails" component={FileDetailsScreen} />
+           <Stack.Screen 
+          name="ImagePreview" 
+          component={ImagePreviewScreen}
+          options={{
+            headerShown: false,
+            presentation: 'modal'
+          }}
+        />
 
   <Stack.Screen name="RegisterProduct" component={RegisterProduct} options={{ title: 'Add Document Details' }} />
         <Stack.Screen name="OTP" component={OTP} options={{ title: 'Verify' }} />

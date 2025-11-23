@@ -20,6 +20,7 @@ import GradientButton from '../components/GradientButton';
 import OutLineButton from '../components/OutLineButton';
 import AddDocumentModal from '../components/AddDocumentModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CreateLinkModal from '../components/CreateLinkModal';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'FileDetails'>;
 
@@ -27,7 +28,7 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
   const { file } = route.params;
   const [showAddDocumentModal, setShowAddDocumentModal] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [showLinkModal, setShowLinkModal] = useState(false); // Add this
   React.useEffect(() => {
     navigation.setOptions({
       headerShown: false,
@@ -86,8 +87,9 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
   //   }
   };
 
+
   const handleCreateLink = () => {
-    Alert.alert('Create Link', 'Link creation functionality coming soon');
+    setShowLinkModal(true);
   };
 
   const handleMakeCopy = () => {
@@ -197,12 +199,12 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
 
         {/* Register Product Button */}
         <TouchableOpacity
-          style={styles.primaryButton}
+          style={globalStyles.primaryButton}
           onPress={() => setShowAddDocumentModal(true)}
           activeOpacity={0.8}
         >
           <MaterialCommunityIcons name="file-document-edit-outline" size={20} color="#FFFFFF" />
-          <Text style={styles.primaryButtonText}>Register Product</Text>
+          <Text style={globalStyles.primaryButtonText}>Register Product</Text>
         </TouchableOpacity>
 
         <Spacer height={12} />
@@ -246,7 +248,8 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
         {/* Download */}
         <TouchableOpacity
           style={styles.actionButton}
-          onPress={handleDownload}
+           onPress={() => navigation.navigate('ImagePreview', { file: file })}
+
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons name="download-outline" size={20} color="#5F6368" />
@@ -267,6 +270,13 @@ export default function FileDetailsScreen({ route, navigation }: Props) {
 
         <Spacer height={40} />
       </ScrollView>
+
+      <CreateLinkModal
+        visible={showLinkModal}
+        onClose={() => setShowLinkModal(false)}
+        fileId={file.id}
+        fileName={file.name || 'Untitled'}
+      />
 
       <AddDocumentModal
         visible={showAddDocumentModal}
@@ -368,28 +378,7 @@ const styles = StyleSheet.create({
     maxWidth: '60%',
     textAlign: 'right',
   },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 8,
-    backgroundColor: colors.primary,
-    gap: 8,
-    shadowColor: '#1A73E8',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  primaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#FFFFFF',
-  },
+
   actionButton: {
     flexDirection: 'row',
     alignItems: 'center',

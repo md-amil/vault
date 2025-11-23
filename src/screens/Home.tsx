@@ -450,7 +450,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
 
       {loading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
+          <ActivityIndicator size="large" color={colors.primary} />
         </View>
       ) : (
         viewMode === 'grid' ?

@@ -157,59 +157,9 @@ useEffect(()=> {
             keyboardShouldPersistTaps="handled"
           >
             {/* Search Folder */}
-            <View style={styles.inputGroup}>
-              <View style={styles.searchContainer}>
-                <TextInput
-                  style={styles.searchInput}
-                  placeholder="Add Tag Name"
-                  placeholderTextColor="#A0AEC0"
-                  value={tagName}
-                  onChangeText={setTagName}
-                  onFocus={() => setShowFolderDropdown(true)}
-                />
-                {/* <MaterialCommunityIcons
-                  name="information-outline"
-                  size={20}
-                  color="#6b5cdb"
-                  style={styles.infoIcon}
-                /> */}
-              </View>
+           
 
-              {/* Folder Dropdown */}
-              {/* {showFolderDropdown && searchQuery && filteredFolders.length > 0 && (
-                <View style={styles.dropdown}>
-                  <View style={styles.dropdownHeaderContainer}>
-                    <Text style={styles.dropdownHeaderLabel}>Wash</Text>
-                  </View>
-                  {filteredFolders.map((folder) => (
-                    <TouchableOpacity
-                      key={folder.id}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setSearchQuery(folder.name);
-                        setShowFolderDropdown(false);
-                      }}
-                    >
-                      <Text style={styles.dropdownItemText}>
-                        {folder.name} {folder.count ? `(${folder.count})` : ''}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
-                  <TouchableOpacity
-                    style={styles.dropdownAddNew}
-                    onPress={() => {
-                      setShowFolderDropdown(false);
-                    }}
-                  >
-                    <Text style={styles.dropdownAddNewText}>
-                      + Add "{searchQuery}" as new
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )} */}
-            </View>
-
-            <Spacer height={20} />
+            
 
             {/* File Name */}
             <View style={styles.inputGroup}>
@@ -224,7 +174,23 @@ useEffect(()=> {
             </View>
 
             <Spacer height={20} />
+             <View style={styles.inputGroup}>
+              <Text style={styles.label}>Tag Name</Text>
+              <View style={styles.searchContainer}>
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Add Tag Name"
+                  placeholderTextColor="#A0AEC0"
+                  value={tagName}
+                  onChangeText={setTagName}
+                  onFocus={() => setShowFolderDropdown(true)}
+                />
+              
+              </View>
 
+            
+            </View>
+<Spacer height={20} />
             {/* Document Category */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Select Document Category</Text>

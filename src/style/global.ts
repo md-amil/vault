@@ -15,6 +15,12 @@ export const colors = {
 
 export const globalStyles = StyleSheet.create({
   // Typography
+    scrollView: {
+    flex: 1,
+  },
+    content: {
+    padding: 20,
+  },
   title: {
     fontSize: 32,
     fontWeight: '700',
@@ -47,8 +53,31 @@ export const globalStyles = StyleSheet.create({
   
   // Links
   link: {
-    color: colors,
+    color: colors.primary,
     fontWeight: '600',
+  },
+  
+    primaryButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 8,
+    backgroundColor: colors.primary,
+    gap: 8,
+    shadowColor: colors.primary,
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  primaryButtonText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#FFFFFF',
   },
   
   // Containers
@@ -94,5 +123,6 @@ export const typography = {
   title: globalStyles.title,
   subtitle: globalStyles.subtitle,
   label: globalStyles.label,
+  
 };
 

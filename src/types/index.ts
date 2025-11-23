@@ -28,7 +28,7 @@ export type RootStackParamList = {
   s3Key?: string;
   s3Url?: string;
   mimeType?: string;
-  size?: string | number |undefined;
+  size?: number;
   folderId?: string;
   folder?: {
     id: string;
@@ -39,6 +39,27 @@ export type RootStackParamList = {
   updatedAt?: string;
 
     };
+   
+  };
+   ImagePreview: {
+    file: {
+    id: string;
+  name?: string;
+  path?: string;
+  s3Key?: string;
+  s3Url?: string;
+  url?:string,
+  mimeType?: string;
+  size?: number;
+  folderId?: string;
+  folder?: {
+    id: string;
+    name: string;
+  };
+  userId?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+    };
   };
    Home: { 
     refresh?: boolean;
@@ -46,6 +67,7 @@ export type RootStackParamList = {
     deletedFolderId?: string;
   } | undefined;
 };
+
 
 export type IFile = {
    id: string;
