@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   StyleSheet,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  Alert,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Spacer from './Spacer';
 import { colors } from '../style/global';
 
+// import GoogleDriveService from '../services/GoogleDriveService';
+import GoogleDriveService from '../service/GoogleDriveService';
 interface UploadOptionsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -36,6 +39,63 @@ export default function UploadOptionsModal({
   onICloud,
   onGoogleCloud,
 }: UploadOptionsModalProps) {
+
+    const [isSignedIn, setIsSignedIn] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [checkingStatus, setCheckingStatus] = useState(true);
+
+    useEffect(() => {
+    if (visible) {
+      // Configure Google Sign-In when modal opens
+      GoogleDriveService.configure();
+      checkSignInStatus();
+    }
+  }, [visible]);
+
+const checkSignInStatus = async () => {
+  try {
+    setCheckingStatus(true);
+    // Check if user exists instead of isSignedIn
+    const user = await GoogleDriveService.getCurrentUser();
+    setIsSignedIn(user !== null);
+  } catch (error) {
+    console.error('Check sign-in status error:', error);
+    setIsSignedIn(false);
+  } finally {
+    setCheckingStatus(false);
+  }
+};
+
+const handleGoogleCloud = async () => {
+  try {
+    setLoading(true);
+
+    if (!isSignedIn) {
+      // Sign in first
+      const userInfo = await GoogleDriveService.signIn();
+      setIsSignedIn(true);
+      Alert.alert('Success', `Signed in as ${userInfo.data.user.email}`);
+      
+      // Close modal and call parent callback
+      onClose();
+      onGoogleCloud(); // This triggers fetchFolderData in parent
+      
+    } else {
+      // Already signed in
+      onClose();
+      onGoogleCloud(); // Fetch Google Drive folders
+    }
+  } catch (error: any) {
+    console.error('Google Drive error:', error);
+    Alert.alert('Error', error.message || 'Failed to connect to Google Drive');
+  } finally {
+    setLoading(false);
+  }
+};
+
+
+
+
   return (
     <Modal
       visible={visible}
@@ -125,17 +185,27 @@ export default function UploadOptionsModal({
               </TouchableOpacity>
 
               {/* Google Cloud */}
-              <TouchableOpacity
+              {/* <TouchableOpacity
                 style={styles.card}
-                onPress={onGoogleCloud}
+                onPress={handleGoogleCloud}
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
                   <MaterialCommunityIcons name="google-drive" size={30} color={colors.primary}/>
                 </View>
                 <Text style={styles.cardLabel}>Google Cloud</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
 
+<TouchableOpacity
+  style={styles.card}
+  onPress={onDocuments} // Use existing document picker
+  activeOpacity={0.7}
+>
+  <View style={styles.iconContainer}>
+    <MaterialCommunityIcons name="file-multiple" size={30} color={colors.primary}/>
+  </View>
+  <Text style={styles.cardLabel}>Google Drive</Text>
+</TouchableOpacity>
               {/* Cancel */}
             
             </View>

@@ -16,6 +16,7 @@ import { foldersAPI, filesAPI } from '../api';
 import { colors, globalStyles } from '../style/global';
 import UploadOptionsModal from '../components/UploadOptionsModal';
 import { useFocusEffect } from '@react-navigation/native';
+import GoogleDriveService from '../service/GoogleDriveService';
 
 export default function HomeScreen({ navigation, route }: { navigation: any, route: any }) {
   const { logout } = useAuth();
@@ -48,6 +49,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
   useEffect(() => {
     fetchFolderData();
   }, []);
+
 
   const fetchFolderData = async () => {
     try {
@@ -245,6 +247,8 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
   }
 
+  
+
   async function addFromDocuments() {
     if (picking) return console.log("already progress"); // Prevent multiple calls
     setIsPicking(true);
@@ -296,6 +300,60 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
 
     }
   }
+
+  const onGoogleCloud = async () => {
+  try {
+    setLoading(true);
+    
+    // Fetch local folders
+    const localFolders = await foldersAPI.getTree();
+    
+    // Fetch Google Drive folders
+    let googleDriveFolders = [];
+    try {
+      googleDriveFolders = await GoogleDriveService.listFolders();
+      console.log('Google Drive folders:', googleDriveFolders);
+      Alert.alert('Success', `Found ${googleDriveFolders.length} Google Drive folders`);
+    } catch (error) {
+      console.error('Error fetching Google Drive folders:', error);
+      Alert.alert('Info', 'Could not fetch Google Drive folders');
+    }
+    
+    // Combine local and Google Drive folders
+    const allFolders = [
+      ...localFolders,
+      ...googleDriveFolders.map((gFolder: any) => ({
+        id: `google_${gFolder.id}`,
+        name: gFolder.name,
+        parent: null,
+        children: [],
+        files: [],
+        createdAt: gFolder.createdTime,
+        updatedAt: gFolder.modifiedTime,
+        source: 'google_drive'
+      }))
+    ];
+    
+    const rootFolder: Folder = {
+      id: 'root',
+      name: 'Home',
+      parent: null,
+      children: allFolders,
+      files: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    setRoot(rootFolder);
+    
+  } catch (error) {
+    console.error('Error:', error);
+    Alert.alert('Error', 'Failed to load Google Drive folders');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const getItemSubtitle = (item: IFile | Folder) => {
     if ('path' in item) {
@@ -521,10 +579,8 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           setShowUploadModal(false);
           Alert.alert('iCloud', 'iCloud integration coming soon');
         }}
-        onGoogleCloud={() => {
-          setShowUploadModal(false);
-          Alert.alert('Google Cloud', 'Google Cloud integration coming soon');
-        }}
+      onGoogleCloud={onGoogleCloud}
+
       />
     </View>
   );
