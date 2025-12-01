@@ -100,6 +100,7 @@ export const globalStyles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingBottom: 12,
+    position:'relative',
     backgroundColor: '#fff',
   },
   header: {

@@ -1,4 +1,4 @@
-// services/GoogleDriveService.ts
+// services/GoogleDriveService.ts - COMPLETE FIXED VERSION
 import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { GDrive } from '@robinbobin/react-native-google-drive-api-wrapper';
 
@@ -14,6 +14,7 @@ class GoogleDriveService {
         scopes: [
           'https://www.googleapis.com/auth/drive.file',
           'https://www.googleapis.com/auth/drive',
+          'https://www.googleapis.com/auth/drive.readonly', // ✅ ADDED for thumbnails
         ],
         webClientId: '314739860532-nsnuatbdkl7vqvnvamfd2j35vdcqtvco.apps.googleusercontent.com',
         offlineAccess: true,
@@ -89,7 +90,7 @@ class GoogleDriveService {
     try {
       const response = await this.gdrive.files.list({
         pageSize: 100,
-        fields: 'files(id, name, mimeType, size, createdTime, modifiedTime)',
+        fields: 'files(id,name,mimeType,size,createdTime,modifiedTime,thumbnailLink,iconLink,webViewLink)', // ✅ FIXED
       });
 
       return response.files || [];
@@ -99,12 +100,13 @@ class GoogleDriveService {
     }
   }
 
+  // ✅ FIXED: Added thumbnail fields
   async listFolders(): Promise<any[]> {
     try {
       const accessToken = await this.getAccessToken();
       
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder'&spaces=drive&fields=files(id,name,createdTime,modifiedTime)&pageSize=100`,
+        `https://www.googleapis.com/drive/v3/files?q=mimeType='application/vnd.google-apps.folder' AND trashed=false&spaces=drive&fields=files(id,name,createdTime,modifiedTime,thumbnailLink,iconLink)&pageSize=100`,
         {
           method: 'GET',
           headers: {
@@ -119,7 +121,7 @@ class GoogleDriveService {
       }
 
       const data = await response.json();
-      console.log('Google Drive folders:', data.files);
+      console.log('Google Drive folders:', data.files?.length || 0);
       return data.files || [];
     } catch (error) {
       console.error('Error fetching folders:', error);
@@ -127,12 +129,62 @@ class GoogleDriveService {
     }
   }
 
+// ✅ REPLACE the downloadFile method with this FIXED version:
+async downloadFile(fileId: string): Promise<{ data: string; mimeType: string }> {
+  try {
+    const accessToken = await this.getAccessToken();
+    
+    // Step 1: Get file metadata
+    const metadataResponse = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?fields=mimeType,name`,
+      {
+        headers: { 
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    
+    if (!metadataResponse.ok) {
+      throw new Error(`Failed to get metadata: ${metadataResponse.statusText}`);
+    }
+    
+    const metadata = await metadataResponse.json();
+    
+    // Step 2: Download file content
+    const downloadUrl = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
+    const response = await fetch(downloadUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Download failed: ${response.status} ${response.statusText}`);
+    }
+    
+    // ✅ REACT NATIVE COMPATIBLE: Convert ArrayBuffer to base64
+    const arrayBuffer = await response.arrayBuffer();
+    const base64Data = Buffer.from(arrayBuffer).toString('base64');
+    
+    console.log(`✅ Downloaded ${metadata.name} (${(base64Data.length * 3 / 4 / 1024).toFixed(1)} KB)`);
+    
+    return {
+      data: base64Data,
+      mimeType: metadata.mimeType || 'application/octet-stream',
+    };
+  } catch (error) {
+    console.error('Download error:', error);
+    throw new Error(`Download failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+
+  // ✅ FIXED: Added ALL thumbnail fields
   async listFilesByFolder(folderId: string): Promise<any[]> {
     try {
       const accessToken = await this.getAccessToken();
       
       const response = await fetch(
-        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents&spaces=drive&fields=files(id,name,mimeType,createdTime,modifiedTime,size)&pageSize=100`,
+        `https://www.googleapis.com/drive/v3/files?q='${folderId}' in parents AND trashed=false&spaces=drive&fields=files(id,name,mimeType,createdTime,modifiedTime,size,thumbnailLink,iconLink,webViewLink,webContentLink)&pageSize=100&orderBy=folder,name`,
         {
           method: 'GET',
           headers: {
@@ -143,10 +195,21 @@ class GoogleDriveService {
       );
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch files: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        throw new Error(`Failed to fetch files: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
+      console.log('Files loaded:', data.files?.length || 0);
+      
+      // ✅ Log thumbnail availability for debugging
+      data.files?.forEach((file: any) => {
+        if (file.mimeType?.startsWith('image/')) {
+          console.log(`📸 ${file.name}: thumbnailLink=${!!file.thumbnailLink}, iconLink=${!!file.iconLink}`);
+        }
+      });
+      
       return data.files || [];
     } catch (error) {
       console.error('Error fetching files by folder:', error);

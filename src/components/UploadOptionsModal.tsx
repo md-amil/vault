@@ -14,6 +14,7 @@ import { colors } from '../style/global';
 
 // import GoogleDriveService from '../services/GoogleDriveService';
 import GoogleDriveService from '../service/GoogleDriveService';
+import { filesAPI } from '../api';
 interface UploadOptionsModalProps {
   visible: boolean;
   onClose: () => void;
@@ -22,7 +23,8 @@ interface UploadOptionsModalProps {
   onGallery: () => void;
   onDocuments: () => void;
   onICloud: () => void;
-  onGoogleCloud: () => void;
+ navigation: any; // ✅ Fixed: was () => void
+  onGoogleDriveUpload: (callback: (fileData: any) => Promise<void>) => void; // ✅
 }
 
 const { width } = Dimensions.get('window');
@@ -37,62 +39,64 @@ export default function UploadOptionsModal({
   onGallery,
   onDocuments,
   onICloud,
-  onGoogleCloud,
+  navigation,
+  onGoogleDriveUpload
 }: UploadOptionsModalProps) {
 
-    const [isSignedIn, setIsSignedIn] = useState(false);
+  const [isSignedIn, setIsSignedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(true);
 
-    useEffect(() => {
+  useEffect(() => {
     if (visible) {
-      // Configure Google Sign-In when modal opens
       GoogleDriveService.configure();
       checkSignInStatus();
     }
   }, [visible]);
 
-const checkSignInStatus = async () => {
-  try {
-    setCheckingStatus(true);
-    // Check if user exists instead of isSignedIn
-    const user = await GoogleDriveService.getCurrentUser();
-    setIsSignedIn(user !== null);
-  } catch (error) {
-    console.error('Check sign-in status error:', error);
-    setIsSignedIn(false);
-  } finally {
-    setCheckingStatus(false);
-  }
-};
-
-const handleGoogleCloud = async () => {
-  try {
-    setLoading(true);
-
-    if (!isSignedIn) {
-      // Sign in first
-      const userInfo = await GoogleDriveService.signIn();
-      setIsSignedIn(true);
-      Alert.alert('Success', `Signed in as ${userInfo.data.user.email}`);
-      
-      // Close modal and call parent callback
-      onClose();
-      onGoogleCloud(); // This triggers fetchFolderData in parent
-      
-    } else {
-      // Already signed in
-      onClose();
-      onGoogleCloud(); // Fetch Google Drive folders
+  const checkSignInStatus = async () => {
+    try {
+      setCheckingStatus(true);
+      const user = await GoogleDriveService.getCurrentUser();
+      setIsSignedIn(user !== null);
+    } catch (error) {
+      console.error('Check sign-in status error:', error);
+      setIsSignedIn(false);
+    } finally {
+      setCheckingStatus(false);
     }
-  } catch (error: any) {
-    console.error('Google Drive error:', error);
-    Alert.alert('Error', error.message || 'Failed to connect to Google Drive');
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
+  // ✅ FIXED: Complete Google Drive handler
+  const handleGoogleDrive = async () => {
+    try {
+      setLoading(true);
+      
+      // Sign in if needed
+      if (!(await GoogleDriveService.isSignedIn())) {
+        const userInfo = await GoogleDriveService.signIn();
+        setIsSignedIn(true);
+        Alert.alert('Success', `Signed in as ${userInfo.data.user.email}`);
+      }
+      
+      // Close modal first
+      onClose();
+      
+      // ✅ Navigate with proper upload callback
+      navigation.navigate('GoogleDriveBrowser', {
+        onUploadToVault: async (fileData: any) => {
+          // ✅ Upload to vault using parent's API
+          await onGoogleDriveUpload(fileData);
+        }
+      });
+      
+    } catch (error: any) {
+      console.error('Google Drive error:', error);
+      Alert.alert('Google Drive Error', error.message || 'Failed to connect');
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
 
@@ -185,27 +189,18 @@ const handleGoogleCloud = async () => {
               </TouchableOpacity>
 
               {/* Google Cloud */}
-              {/* <TouchableOpacity
+              <TouchableOpacity
                 style={styles.card}
-                onPress={handleGoogleCloud}
+                onPress={handleGoogleDrive}
                 activeOpacity={0.7}
               >
                 <View style={styles.iconContainer}>
                   <MaterialCommunityIcons name="google-drive" size={30} color={colors.primary}/>
                 </View>
-                <Text style={styles.cardLabel}>Google Cloud</Text>
-              </TouchableOpacity> */}
+                <Text style={styles.cardLabel}>Google Drive</Text>
+              </TouchableOpacity>
 
-<TouchableOpacity
-  style={styles.card}
-  onPress={onDocuments} // Use existing document picker
-  activeOpacity={0.7}
->
-  <View style={styles.iconContainer}>
-    <MaterialCommunityIcons name="file-multiple" size={30} color={colors.primary}/>
-  </View>
-  <Text style={styles.cardLabel}>Google Drive</Text>
-</TouchableOpacity>
+
               {/* Cancel */}
             
             </View>

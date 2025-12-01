@@ -20,6 +20,7 @@ import Loading from './src/screens/Loading';
 import RegisterProduct from './src/screens/RegisterProduct';
 import FileDetailsScreen from './src/screens/FileDetailScreen';
 import ImagePreviewScreen from './src/screens/ImagePreviewScreen';
+import GoogleDriveBrowserScreen from './src/screens/GoogleDriveBrowserScreen';
 export type RootStackParamList = {
   Landing: undefined;
   Login: undefined;
@@ -61,7 +62,11 @@ function AppNavigator() {
             presentation: 'modal'
           }}
         />
-
+<Stack.Screen 
+  name="GoogleDriveBrowser" 
+  component={GoogleDriveBrowserScreen}
+  options={{ headerShown: false }}
+/>
   <Stack.Screen name="RegisterProduct" component={RegisterProduct} options={{ title: 'Add Document Details' }} />
         <Stack.Screen name="OTP" component={OTP} options={{ title: 'Verify' }} />
         <Stack.Screen name="Home" component={Home} />

@@ -249,6 +249,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
 
   
 
+  
   async function addFromDocuments() {
     if (picking) return console.log("already progress"); // Prevent multiple calls
     setIsPicking(true);
@@ -301,60 +302,39 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
   }
 
-  const onGoogleCloud = async () => {
+  const uploadGoogleDriveFileToVault = async (fileData: any) => {
   try {
-    setLoading(true);
-    
-    // Fetch local folders
-    const localFolders = await foldersAPI.getTree();
-    
-    // Fetch Google Drive folders
-    let googleDriveFolders = [];
-    try {
-      googleDriveFolders = await GoogleDriveService.listFolders();
-      console.log('Google Drive folders:', googleDriveFolders);
-      Alert.alert('Success', `Found ${googleDriveFolders.length} Google Drive folders`);
-    } catch (error) {
-      console.error('Error fetching Google Drive folders:', error);
-      Alert.alert('Info', 'Could not fetch Google Drive folders');
+    const formData = new FormData();
+    formData.append('file', {
+      uri: `data:${fileData.mimeType};base64,${fileData.data}`,
+      type: fileData.mimeType,
+      name: fileData.name,
+    } as any);
+    formData.append('name', fileData.name);
+    formData.append('folderId', current.id);
+
+    const uploadedFile = await filesAPI.upload(formData);
+
+    if (stack.length === 0) {
+      setRoot((r) => updateChild(r, uploadedFile, 'files'));
+    } else {
+      setStack((s) =>
+        s.map((folder, index) => {
+          if (index !== s.length - 1) return folder;
+          return updateChild(folder, uploadedFile, 'files');
+        })
+      );
     }
-    
-    // Combine local and Google Drive folders
-    const allFolders = [
-      ...localFolders,
-      ...googleDriveFolders.map((gFolder: any) => ({
-        id: `google_${gFolder.id}`,
-        name: gFolder.name,
-        parent: null,
-        children: [],
-        files: [],
-        createdAt: gFolder.createdTime,
-        updatedAt: gFolder.modifiedTime,
-        source: 'google_drive'
-      }))
-    ];
-    
-    const rootFolder: Folder = {
-      id: 'root',
-      name: 'Home',
-      parent: null,
-      children: allFolders,
-      files: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-    
-    setRoot(rootFolder);
-    
+
+    Alert.alert('Success', `${fileData.name} imported from Google Drive!`);
   } catch (error) {
-    console.error('Error:', error);
-    Alert.alert('Error', 'Failed to load Google Drive folders');
-  } finally {
-    setLoading(false);
+    console.error('Google Drive upload error:', error);
+    Alert.alert('Error', 'Failed to upload Google Drive file');
   }
 };
 
 
+  
   const getItemSubtitle = (item: IFile | Folder) => {
     if ('path' in item) {
       return 'File';
@@ -545,6 +525,8 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           />
       )}
 
+
+
       <Fab
         showActions={showActions}
         setShowUploadModal={setShowUploadModal}
@@ -579,7 +561,9 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           setShowUploadModal(false);
           Alert.alert('iCloud', 'iCloud integration coming soon');
         }}
-      onGoogleCloud={onGoogleCloud}
+navigation={navigation}
+  onGoogleDriveUpload={uploadGoogleDriveFileToVault} 
+
 
       />
     </View>
