@@ -1,4 +1,3 @@
-// components/ShareLinkModal.tsx
 import React, { useState } from 'react';
 import {
   View,
@@ -9,7 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import Clipboard from '@react-native-clipboard/clipboard';
+import  Clipboard from '@react-native-clipboard/clipboard';
 import { colors } from '../style/global';
 
 interface ShareLinkModalProps {

@@ -12,6 +12,7 @@ export type Folder = {
   parent: Folder | null;
   children: Folder[];
   files: IFile[];
+  fileCount?: number;
   createdAt: string;
   updatedAt: string;
 };

@@ -31,6 +31,7 @@ export const authAPI = {
   // Send OTP to mobile number
   sendOTP: async (mobile: string) => {
     const response = await api.post('/auth/send-otp', { mobile });
+    console.log(response);
     return response.data;
   },
 

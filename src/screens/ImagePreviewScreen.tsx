@@ -89,10 +89,8 @@ const handleDownload = async () => {
     if (downloadResult.statusCode === 200) {
       // Save to camera roll (automatically visible in gallery)
       await CameraRoll.save(filePath, { type: 'photo' });
-      
       // Clean up cache file
       await RNFS.unlink(filePath);
-      
       Alert.alert('Success', 'Image saved to Gallery');
     } else {
       Alert.alert('Error', 'Download failed');
