@@ -73,24 +73,30 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
   };
 
-  const handleLogout = async () => {
-    setShowHeaderMenu(false);
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            await logout();
-            navigation.navigate('Landing');
-          }
-        }
-      ]
-    );
-  };
+ const handleLogout = async () => {
+  setShowHeaderMenu(false);
+  Alert.alert(
+    'Logout',
+    'Are you sure you want to logout?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          await logout(); // clear tokens / auth state in context
+
+          // Reset stack so user cannot go back
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Landing' }], // or 'Login' screen name
+          });
+        },
+      },
+    ],
+  );
+};
+
 
   const goUp = useCallback(() => {
     if (stack.length > 0) {
@@ -352,6 +358,9 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
   };
 
+
+
+
   const renderFolderCardGrid = ({ item }: { item: IFile | Folder }) => {
     if ('path' in item) {
       return (
@@ -425,6 +434,9 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
 
   return (
     <View style={styles.container}>
+      <View style={{ position: 'relative', zIndex: 10 }}>
+
+ 
       <View style={globalStyles.Pageheader}>
         <View style={styles.backButtonContainer}>
           {stack.length > 0 && (
@@ -441,12 +453,29 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           </Text>
         </View>
 
-        <TouchableOpacity
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+             <TouchableOpacity
+      onPress={() => navigation.navigate('VaultSearch')}
+      style={{ padding: 8, marginRight: 4 }}
+    >
+      <MaterialCommunityIcons name="magnify" size={24} color="#1A1A1A" />
+    </TouchableOpacity>
+
+ <TouchableOpacity
+      onPress={handleLogout}
+      style={{ padding: 8, marginRight: 4 }}
+    >
+      <MaterialCommunityIcons name="logout" size={24} color="#d32f2f" />
+    </TouchableOpacity>
+              <TouchableOpacity
           onPress={() => setShowViewMenu(!showViewMenu)}
           style={styles.addButton}
         >
           <MaterialCommunityIcons name="dots-vertical" size={24} color="#1A1A1A" />
         </TouchableOpacity>
+</View>
+
+      
 
         {showViewMenu && (
           <View style={styles.viewMenuDropdown}>
@@ -476,6 +505,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
           </View>
         )}
       </View>
+           </View>
 
       {stack.length === 0 && (
         <View style={styles.userSection}>

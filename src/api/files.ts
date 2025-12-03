@@ -1,5 +1,6 @@
 import { Asset } from 'react-native-image-picker';
 import api from './index';
+import { search } from 'react-native-country-picker-modal/lib/CountryService';
 
 // Files API functions
 export const filesAPI = {
@@ -122,6 +123,15 @@ export const filesAPI = {
   // Delete file
   delete: async (fileId: string) => {
     const response = await api.delete(`/files/${fileId}`);
+    return response.data;
+  },
+   search: async (params: {
+  category?: string;
+  tag?: string;
+  search?: string;
+  userId?: string;
+}) => {
+    const response = await api.get(`/files/search`,{params});
     return response.data;
   }
 };

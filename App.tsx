@@ -21,6 +21,7 @@ import RegisterProduct from './src/screens/RegisterProduct';
 import FileDetailsScreen from './src/screens/FileDetailScreen';
 import ImagePreviewScreen from './src/screens/ImagePreviewScreen';
 import GoogleDriveBrowserScreen from './src/screens/GoogleDriveBrowserScreen';
+import VoultSearchScreen from "./src/screens/VaultSearchScreen"
 export type RootStackParamList = {
   Landing: undefined;
   Login: undefined;
@@ -31,6 +32,8 @@ export type RootStackParamList = {
   ImagePreview: { file?: any } | undefined;
   OTP: { phone?: string; countryCode?: string } | undefined;
   Loading: undefined;
+  GoogleDriveBrowser:undefined;
+  VaultSearch:undefined
 };
 
 
@@ -51,8 +54,8 @@ function AppNavigator() {
         screenOptions={{ headerShown: true }}
       >
         <Stack.Screen name="Landing" component={Landing} options={{ headerShown: false }} />
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Signup" component={Signup} />
+        <Stack.Screen name="Login" component={Login} options={{ headerShown: false }} />
+        <Stack.Screen name="Signup" component={Signup} options={{ headerShown: false }}/>
           <Stack.Screen name="FileDetails" component={FileDetailsScreen} />
            <Stack.Screen 
           name="ImagePreview" 
@@ -62,11 +65,19 @@ function AppNavigator() {
             presentation: 'modal'
           }}
         />
+
+
 <Stack.Screen 
   name="GoogleDriveBrowser" 
   component={GoogleDriveBrowserScreen}
   options={{ headerShown: false }}
 />
+<Stack.Screen
+  name="VaultSearch"
+  component={VoultSearchScreen}
+  options={{ headerShown: false }}
+/>
+
   <Stack.Screen name="RegisterProduct" component={RegisterProduct} options={{ title: 'Add Document Details' }} />
         <Stack.Screen name="OTP" component={OTP} options={{ title: 'Verify' }} />
         <Stack.Screen name="Home" component={Home} />

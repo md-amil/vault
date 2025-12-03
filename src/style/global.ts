@@ -92,6 +92,26 @@ export const globalStyles = StyleSheet.create({
     paddingBottom: 40,
   },
   
+    brandContainer: {
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+
+  
+  logoCircle: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
   // Header
     Pageheader: {
     paddingTop: 40,

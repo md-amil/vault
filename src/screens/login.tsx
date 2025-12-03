@@ -1,43 +1,73 @@
-import React, { useMemo, useState, } from 'react';
-import { ScrollView, StyleSheet,KeyboardAvoidingView, Text, TextInput, TouchableOpacity, View, Switch, Alert, ActivityIndicator, Platform } from 'react-native';
-import { authAPI } from '../api/auth';
-// import { useAuth } from '../contexts/AuthContext';
+import React, { useMemo, useState } from 'react';
+import {
+  ScrollView,
+  StyleSheet,
+  KeyboardAvoidingView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Alert,
+  Platform,
+} from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { CountryPicker } from 'react-native-country-codes-picker';
+import { authAPI } from '../api/auth';
 import GradientButton from '../components/GradientButton';
 import Spacer from '../components/Spacer';
-import { colors } from '../style/global';
+import { colors, globalStyles } from '../style/global';
+
+// 1) Define a header component for the picker
+const CountryHeader = ({ onPress }: { onPress: () => void }) => (
+  <View
+    style={{
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      borderBottomWidth: 1,
+      borderBottomColor: '#E5E7EB',
+      backgroundColor: '#FFFFFF',
+    }}
+  >
+    <TouchableOpacity onPress={onPress} style={{ padding: 4, marginRight: 8 }}>
+      <MaterialCommunityIcons name="arrow-left" size={22} color="#111827" />
+    </TouchableOpacity>
+    <Text style={{ fontSize: 16, fontWeight: '600', color: '#111827' }}>
+      Select country code
+    </Text>
+  </View>
+);
+
 
 
 export default function LoginScreen({ navigation }: { navigation: any }) {
   const [countryCode, setCountryCode] = useState<string>('+1');
   const [phone, setPhone] = useState<string>('');
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
-  const [loading, setLoading] = useState<boolean>(false);
   const [receiveNotifications, setReceiveNotifications] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
 
-  const isValid = useMemo(() => {
-    return Boolean(countryCode) && /^\d{6,15}$/.test(phone) && acceptedTerms;
-  }, [countryCode, phone, acceptedTerms]);
+  const isValid = useMemo(
+    () => Boolean(countryCode) && /^\d{6,15}$/.test(phone) && acceptedTerms,
+    [countryCode, phone, acceptedTerms],
+  );
 
   async function onContinue() {
     if (!isValid || loading) return;
-    
     try {
       setLoading(true);
       const fullPhoneNumber = `${countryCode}${phone}`;
-      
-      // Send OTP to the phone number
       const response = await authAPI.sendOTP(fullPhoneNumber);
-      console.log(response, 'checking response');
-      
-      // Navigate to OTP screen with phone number
+      console.log(response, 'OTP response');
       navigation.navigate('OTP', { phone: fullPhoneNumber, countryCode });
     } catch (error: any) {
       console.error('Login error:', error);
       Alert.alert(
-        'Error',
-        error.response?.data?.message || 'Failed to send OTP. Please try again.',
-        [{ text: 'OK' }]
+        'Unable to continue',
+        error?.response?.data?.message || 'Could not send OTP. Please try again.',
+        [{ text: 'OK' }],
       );
     } finally {
       setLoading(false);
@@ -45,248 +75,243 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
   }
 
   return (
-       <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+    <KeyboardAvoidingView
+      style={styles.root}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-    <ScrollView contentContainerStyle={styles.screen} keyboardShouldPersistTaps="handled">
-       <View style={styles.container}>
-      {/* Header */}
-      {/* <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color="#333" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Login</Text>
-        
-      </View> */}
-
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent} 
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Title */}
-        <Text style={styles.title}>Login</Text>
-        <Text style={styles.subtitle}>Enter your mobile number</Text>
+        {/* Brand / top section */}
+         <Spacer height={44} />
+        <View style={globalStyles.brandContainer}>
+          <View style={globalStyles.logoCircle}>
+              <MaterialCommunityIcons name="account-circle-outline" size={28} color="#FFFFFF" />
+
+          </View>
+                   <Text style={styles.title}>Login </Text>
+         <Text style={styles.subtitle}>
+            Enter your mobile number and we’ll send you a one‑time verification code.
+          </Text>
+
+        </View>
         <Spacer height={30} />
 
-        {/* Mobile Number Input */}
-        <Text style={styles.label}>Mobile Number </Text>
-        <View style={styles.phoneContainer}>
-          {/* Country Code Picker */}
-          {/* <TouchableOpacity style={styles.countryCodeButton}> 
-            <Text style={styles.countryCodeText}>IN {countryCode}</Text>
-            <MaterialCommunityIcons name="chevron-down" size={20} color="#333" />
-        </TouchableOpacity>  */}
+        {/* Card */}
+        <View >
 
-          {/* Phone Input */}
+          
+          
+
+          {/* <Text style={styles.label}>Mobile number</Text> */}
+          <View style={styles.phoneRow}>
+            {/* Country code dropdown */}
+            <TouchableOpacity
+              style={styles.countryCodeButton}
+              onPress={() => setShowCountryPicker(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.countryCodeLabel}>{countryCode}</Text>
+              <MaterialCommunityIcons
+                name="chevron-down"
+                size={18}
+                color="#4B5563"
+              />
+            </TouchableOpacity>
+
+            {/* Phone input */}
             <TextInput
-          value={countryCode}
-          onChangeText={setCountryCode}
-          style={styles.countryCodeInput}
-          keyboardType="phone-pad"
-          placeholder="+1"
-          placeholderTextColor="#A0AEC0"
-        />
-           <TextInput
-          value={phone}
-          onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ''))}
-          style={styles.phoneInput}
-          keyboardType="number-pad"
-          placeholder="123 456 7890"
-         placeholderTextColor="#A0AEC0"
-          maxLength={15}
-        />
-        
-        </View>
-
-<Spacer height={20} />
-        {/* Terms Checkbox */}
-       
-        <TouchableOpacity 
-          style={styles.checkboxRow} 
-          onPress={() => setAcceptedTerms(!acceptedTerms)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
-            {acceptedTerms && (
-              <MaterialCommunityIcons name="check" size={16} color="#fff" />
-            )}
+              value={phone}
+              onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ''))}
+              style={styles.phoneInput}
+              keyboardType="number-pad"
+              placeholder="000 000 0000"
+              placeholderTextColor="#A0AEC0"
+              maxLength={15}
+            />
           </View>
-          {/* <Switch value={acceptedTerms} onValueChange={setAcceptedTerms} /> */}
-          <Text style={styles.checkboxText}>
-            By continuing, you agree to our{' '}
-            <Text style={styles.link}>Terms & Conditions</Text>
-          </Text>
-        </TouchableOpacity>
+ <Spacer height={40} />
 
-
-        {/* Notifications Checkbox */}
-        <TouchableOpacity 
-          style={styles.checkboxRow} 
-          onPress={() => setReceiveNotifications(!receiveNotifications)}
-          activeOpacity={0.7}
-        >
-          <View style={[styles.checkbox, receiveNotifications && styles.checkboxChecked]}>
-            {receiveNotifications && (
-              <MaterialCommunityIcons name="check" size={16} color="#fff" />
-            )}
-          </View>
-          <Text style={styles.checkboxText}>Agree to receive OTP notifications</Text>
-        </TouchableOpacity>
-
-        {/* Login Button */}
-     <Spacer height={30} />
-   <GradientButton
-          title="Login"
-          onPress={onContinue}
-         disabled={!isValid || loading} 
-          loading={loading}
-        />
-        {/* Register Link */}
-         <Spacer height={50} />
-        <View style={styles.registerRow}>
-          <Text style={styles.registerText}>Don't have an account? </Text>
-          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-            <Text style={styles.registerLink}>Register</Text>
+          {/* Terms */}
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setAcceptedTerms(!acceptedTerms)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.checkbox, acceptedTerms && styles.checkboxChecked]}>
+              {acceptedTerms && (
+                <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+              )}
+            </View>
+            <Text style={styles.checkboxText}>
+              I agree to the{' '}
+              <Text style={styles.link}>Terms & Conditions</Text> and{' '}
+              <Text style={styles.link}>Privacy Policy</Text>.
+            </Text>
           </TouchableOpacity>
-          {/* <Text>sdf alsdfa</Text>
-           <TouchableOpacity onPress={() => navigation.navigate('OTP')}>
-            <Text style={styles.registerLink}>Register</Text>
-          </TouchableOpacity> */}
+
+          {/* Notifications */}
+           <Spacer height={10} />
+          <TouchableOpacity
+            style={styles.checkboxRow}
+            onPress={() => setReceiveNotifications(!receiveNotifications)}
+            activeOpacity={0.7}
+          >
+            <View
+              style={[styles.checkbox, receiveNotifications && styles.checkboxChecked]}
+            >
+              {receiveNotifications && (
+                <MaterialCommunityIcons name="check" size={14} color="#FFFFFF" />
+              )}
+            </View>
+            <Text style={styles.checkboxText}>
+              Send me OTP and important account notifications.
+            </Text>
+          </TouchableOpacity>
+
+          <Spacer height={70} />
+
+          <GradientButton
+            title={loading ? 'Sending code…' : 'Continue'}
+            onPress={onContinue}
+            disabled={!isValid || loading}
+            loading={loading}
+          />
         </View>
-         <Spacer height={70} />
+        
+
+        {/* Bottom auth hint */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>New to Vault?</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+            <Text style={styles.footerLink}> Create an account</Text>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-    </View>
-   
-      {/* <Text style={styles.title}>Login </Text>
-      <Text style={styles.label}>Mobile number</Text>
-      <View style={styles.row}>
-        <TextInput
-          value={countryCode}
-          onChangeText={setCountryCode}
-          style={styles.countryCodeInput}
-          keyboardType="phone-pad"
-          placeholder="+1"
-          placeholderTextColor="#888"
-        />
-        <TextInput
-          value={phone}
-          onChangeText={(t) => setPhone(t.replace(/[^0-9]/g, ''))}
-          style={styles.phoneInput}
-          keyboardType="number-pad"
-          placeholder="123 456 7890"
-          placeholderTextColor="#888"
-          maxLength={15}
-        />
-      </View> */}
 
-      {/* <View style={styles.termsRow}>
-        <Switch value={acceptedTerms} onValueChange={setAcceptedTerms} />
-        <Text style={styles.termsText}>
-          I agree to the <Text style={styles.link}>Terms</Text> and <Text style={styles.link}>Privacy Policy</Text>
-        </Text>
-      </View> */}
+      {/* Country code picker */}
+<CountryPicker
+  lang="en"
+  show={showCountryPicker}
+  onBackdropPress={() => setShowCountryPicker(false)}
+  ListHeaderComponent={() => (
+    <CountryHeader onPress={() => setShowCountryPicker(false)} />
+  )}
+  popularCountries={['us', 'gb', 'in']}
+  pickerButtonOnPress={(item) => {
+    setCountryCode(item.dial_code);
+    setShowCountryPicker(false);
+  }}
+/>
 
-      {/* <TouchableOpacity 
-        style={[styles.primaryButton, (!isValid || loading) && styles.disabledButton]} 
-        disabled={!isValid || loading} 
-        onPress={onContinue}
-      >
-        {loading ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.primaryButtonText}>Continue</Text>
-        )}
-      </TouchableOpacity> */}
-    </ScrollView>
+
+
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-   container: {
+  root: {
     flex: 1,
-    backgroundColor: colors.background
-  },
-
-  backButton: {
-    padding: 8,
-  },
-
-  shareButton: {
-    padding: 8,
+    backgroundColor: '#F5F5F7',
   },
   scrollContent: {
+    flexGrow: 1,
     paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
+    paddingTop: 48,
+    paddingBottom: 32,
+  },
+
+  brandName: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#111827',
+  },
+  brandTagline: {
+    marginTop: 4,
+    fontSize: 12,
+    color: '#6B7280',
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.03,
+    shadowRadius: 10,
+    elevation: 2,
   },
   title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
   },
   subtitle: {
-    fontSize: 14,
-    color: '#666',
-    marginBottom: 32,
+    fontSize: 13,
+    color: '#6B7280',
+    textAlign:'center'
   },
   label: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#2D3748',
-    marginBottom: 12,
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#4B5563',
+    marginTop: 20,
+    marginBottom: 8,
   },
-  phoneContainer: {
+  phoneRow: {
     flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
+    marginBottom: 4,
   },
   countryCodeButton: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    width: 72,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 14,
-    backgroundColor: '#fff',
-    gap: 4,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    marginRight: 8,
   },
-  countryCodeText: {
-    fontSize: 15,
-    color: '#333',
+  countryCodeLabel: {
+    fontSize: 14,
+    color: '#111827',
     fontWeight: '500',
   },
   phoneInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#e0e0e0',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 15,
-    color: '#333',
-    backgroundColor: '#fff',
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    backgroundColor: '#F9FAFB',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 14,
+    color: '#111827',
   },
   checkboxRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
-    marginBottom: 16,
-    gap: 12,
+    marginTop: 10,
   },
   checkbox: {
-    width: 20,
-    height: 20,
-    borderRadius: 4,
-    borderWidth: 2,
-    borderColor: '#d0d0d0',
+    width: 18,
+    height: 18,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    borderColor: '#D1D5DB',
     alignItems: 'center',
     justifyContent: 'center',
-    marginTop: 2,
+    marginRight: 10,
+    marginTop: 1,
   },
   checkboxChecked: {
     backgroundColor: colors.primary,
@@ -295,78 +320,26 @@ const styles = StyleSheet.create({
   checkboxText: {
     flex: 1,
     fontSize: 13,
-    color: '#555',
-    lineHeight: 20,
+    color: '#4B5563',
+    lineHeight: 19,
   },
   link: {
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: '500',
   },
- 
- 
-  registerRow: {
+  footer: {
+    marginTop: 18,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  registerText: {
-    fontSize: 14,
-    color: '#666',
+  footerText: {
+    fontSize: 13,
+    color: '#6B7280',
   },
-  registerLink: {
-    fontSize: 14,
+  footerLink: {
+    fontSize: 13,
     color: colors.primary,
-    fontWeight: '600',
+    fontWeight: '500',
   },
-  screen: {
-    // flexGrow: 1,
-    // alignItems: 'center',
-    // paddingTop: 24,
-    // paddingHorizontal: 24,
-    // gap: 16,
-  },
-  // title: {
-  //   fontSize: 24,
-  //   fontWeight: '700',
-  //   marginTop: 8,
-  // },
-  row: {
-    flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-    alignItems: 'center',
-  },
-  countryCodeInput: {
-    width: 80,
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 10,
-    backgroundColor:'#fff',
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    fontSize: 16,
-  },
-  // phoneInput: {
-  //   flex: 1,
-  //   borderWidth: 1,
-  //   borderColor: '#ccc',
-  //   borderRadius: 10,
-  //   paddingHorizontal: 12,
-  //   paddingVertical: 12,
-  //   fontSize: 16,
-  // },
-
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    width: '100%',
-    marginTop: 8,
-  },
-  termsText: {
-    flex: 1,
-    color: '#333',
-  },
- 
-
 });
