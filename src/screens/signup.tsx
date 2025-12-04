@@ -67,17 +67,17 @@ export default function SignupScreen({ navigation }: { navigation: any }) {
         <View >
          
           
-              <Text style={styles.label}>First name</Text>
+              <Text style={styles.label}>Full name</Text>
               <TextInput
                 value={firstName}
                 onChangeText={setFirstName}
-                placeholder="John"
+                placeholder="Enter your Full Name"
                 placeholderTextColor="#A0AEC0"
                 style={styles.input}
                 autoCapitalize="words"
                 returnKeyType="next"
               />
-        <Spacer height={13} />
+        {/* <Spacer height={13} />
            
               <Text style={styles.label}>Last name</Text>
               <TextInput
@@ -89,7 +89,7 @@ export default function SignupScreen({ navigation }: { navigation: any }) {
                 autoCapitalize="words"
                 returnKeyType="next"
               />
-         
+          */}
     
 
           <Spacer height={13} />
