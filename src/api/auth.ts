@@ -28,35 +28,69 @@ const clearStoredToken = async (): Promise<void> => {
 
 // Authentication API functions
 export const authAPI = {
-  // Send OTP to mobile number
   sendOTP: async (mobile: string) => {
-    const response = await api.post('/auth/send-otp', { mobile });
+    const cleanMobile = mobile.replace(/\+/g, '').trim();
+    const response = await api.post('/auth/send-otp', { mobile: cleanMobile });
+    console.log(response,'checking resposne ns')
+    return
     return response.data;
   },
 
-  // Verify OTP and get token
-  verifyOTP: async (mobile: string, otp: string) => {
-    const response = await api.post('/auth/verify-otp', { mobile, otp });
+
+  register: async ({ name, mobile, email }: {
+    name: string;
+    mobile: string;
+    email: string;
+  }) => {
+    const cleanMobile = mobile.replace(/\+/g, '').trim();
+
+    const response = await api.post('/auth/register', {
+      name: name.trim(),
+      mobile: cleanMobile,
+      email: email.trim(),
+    });
+
+    return response.data;
+  },
+verifyOTP: async (mobile: string, otp: string) => {
+   const cleanMobile = mobile.replace(/\+/g, '').trim();
+  const cleanOtp = String(otp).trim();  // ✅ force string
+
+  console.log("Final OTP:", cleanOtp, "Length:", cleanOtp.length, cleanOtp);
+
+  if (!/^\d{6}$/.test(cleanOtp)) {
+    throw new Error("OTP must be a 6-digit number");
+  }
+
+  try {
+ const response = await api.post('/auth/verify-otp', {
+  mobile: cleanMobile,
+  otp: cleanOtp   
+});
+
     const { access_token } = response.data;
-    console.log(access_token);
+
     if (access_token) {
       await setStoredToken(access_token);
     }
-    return response.data;
-  },
 
-  // Get user profile
+    return response.data;
+  } catch (error: any) {
+    console.log("VERIFY OTP ERROR:", error.response?.data);
+    console.log("STATUS:", error.response?.status);
+  }
+},
+
+
   getProfile: async () => {
     const response = await api.get('/auth/profile');
     return response.data;
   },
 
-  // Logout (clear token)
   logout: async () => {
     await clearStoredToken();
   },
 
-  // Check if user is authenticated
   isAuthenticated: async (): Promise<boolean> => {
     const token = await getStoredToken();
     return !!token;

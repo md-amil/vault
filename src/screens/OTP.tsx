@@ -76,6 +76,7 @@ export default function OTPScreen({ route, navigation }: Params) {
       setLoading(true);
       Keyboard.dismiss();
       
+      // const mobile =  `${(countryCode || '').replace('+', '')}${(phone || '').trim()}`
       const response = await authAPI.verifyOTP(phone, code);
       
       if (response.access_token) {
@@ -129,13 +130,25 @@ export default function OTPScreen({ route, navigation }: Params) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Title */}
-          <Text style={globalStyles.title}>Verify OTP</Text>
-          <Text style={globalStyles.subtitle}>
-            Enter the OTP sent to your mobile number
-          </Text>
 
-          <Spacer height={70} />
+            <View style={globalStyles.brandContainer}>
+                    <View style={globalStyles.logoCircle}>
+                        <MaterialCommunityIcons name="account-circle-outline" size={28} color="#FFFFFF" />
+          
+                    </View>
+                             <Text style={styles.title}>Verify OTP </Text>
+                   <Text style={styles.subtitle}>
+                      Enter the OTP sent to your mobile number
+                    </Text>
+          
+                  </View>
+                  <Spacer height={30} />
+          {/* Title */}
+        
+           
+  
+
+          {/* <Spacer height={70} /> */}
 
           {/* OTP Input Boxes */}
           <View style={styles.otpContainer}>
@@ -239,11 +252,11 @@ const styles = StyleSheet.create({
     paddingTop: 32,
     paddingBottom: 40,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: '700',
-    color: '#000',
-    marginBottom: 8,
+ title: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#111827',
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,

@@ -42,7 +42,7 @@ const CountryHeader = ({ onPress }: { onPress: () => void }) => (
 
 
 export default function LoginScreen({ navigation }: { navigation: any }) {
-  const [countryCode, setCountryCode] = useState<string>('+1');
+  const [countryCode, setCountryCode] = useState<string>('+91');
   const [phone, setPhone] = useState<string>('');
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
   const [receiveNotifications, setReceiveNotifications] = useState<boolean>(false);

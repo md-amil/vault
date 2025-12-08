@@ -90,7 +90,16 @@ export const filesAPI = {
     const response = await api.get(`/files/${fileId}`);
     return response.data;
   },
-
+  getCategories: async () => {
+    const response = await api.get(`/categories`);
+    return response.data;
+  },
+  
+  getTags: async () => {
+    const response = await api.get(`/tags`);
+    return response.data;
+  },
+  
   // Download file
   // Download file
   download: async (fileId: string) => {

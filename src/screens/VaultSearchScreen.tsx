@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -15,58 +15,83 @@ import FilterBottomSheet, { FilterOption } from '../components/FilterBottomSheet
 import { filesAPI } from '../api';
 import { useAuth } from '../contexts/AuthContext';
 
-// const { user } = useAuth();
-const userId  = 'some-user-id';;
 
+
+// const { user } = useAuth();
+const userId = 'some-user-id';
 
 export default function VaultSearchScreen({ navigation }: any) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<(IFile | Folder)[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // which dropdown is open
   const [activeSheet, setActiveSheet] =
     useState<null | 'Category' | 'Tag' | 'people' | 'modified'>(null);
 
   const [selectedCategory, setSelectedCategory] = useState<FilterOption | null>(null);
+  const [selectedTag, setSelectedTag] = useState<FilterOption | null>(null);
 
-  // dropdown data
-  const categoryOptions: FilterOption[] = [
-    { id: 'docs',       label: 'Documents',       icon: 'file-document-outline',       iconColor: '#1A73E8' },
-    { id: 'sheets',     label: 'Spreadsheets',    icon: 'file-table-box',              iconColor: '#0F9D58' },
-    { id: 'slides',     label: 'Presentations',   icon: 'presentation',                iconColor: '#F4B400' },
-    { id: 'photos',     label: 'Photos & images', icon: 'image-multiple',              iconColor: '#E8710A' },
-    { id: 'forms',      label: 'Forms',           icon: 'file-document-edit-outline',  iconColor: '#A142F4' },
-    { id: 'pdfs',       label: 'PDFs',            icon: 'file-pdf-box',                iconColor: '#EA4335' },
-    { id: 'videos',     label: 'Videos',          icon: 'video-outline',               iconColor: '#34A853' },
-    { id: 'shortcuts',  label: 'Shortcuts',       icon: 'link-variant',                iconColor: '#5F6368' },
-  ];
-const onSearch = async () => {
-  try {
-    setLoading(true);
+  const [categoryOptions, setCategoryOptions] = useState<FilterOption[]>([]);
+  const [tagOptions, setTagOptions] = useState<FilterOption[]>([]);
 
-    const params: any = {
-      search: query || undefined,                    // text box
-      category: selectedCategory?.id || undefined,   // from Category sheet
-      tag: null,                                     // TODO: when Tag filter is ready
-      userId: userId,
+  // fetch categories & tags on mount
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const [categories, tags] = await Promise.all([
+          filesAPI.getCategories(),   // GET /categories
+          filesAPI.getTags(),         // GET /tags
+        ]);
+
+        // map API data -> FilterOption
+        const mappedCategories: FilterOption[] = categories.map((c: any) => ({
+          id: String(c.id),          // or c.slug / c._id based on backend
+          label: c.name,
+          icon: 'folder',            // or dynamic if API returns type
+          iconColor: '#1A73E8',
+        }));
+
+        const mappedTags: FilterOption[] = tags.map((t: any) => ({
+          id: String(t.id),
+          label: t.name,
+          icon: 'tag',
+          iconColor: '#5F6368',
+        }));
+
+        setCategoryOptions(mappedCategories);
+        setTagOptions(mappedTags);
+      } catch (error) {
+        console.error('Error loading filters', error);
+      }
     };
 
-    Object.keys(params).forEach(
-      (k) => params[k] === undefined || params[k] === null && delete params[k]
-    );
+    loadFilters();
+  }, []);
 
-    const data = await filesAPI.search(params);
-    
-    console.log(data,'checking data')// GET /files/search
-    setResults(data || []);
-  } catch (e) {
-    console.error('Search error', e);
-  } finally {
-    setLoading(false);
-  }
-};
+  const onSearch = async () => {
+    try {
+      setLoading(true);
 
+      const params: any = {
+        search: query || undefined,
+        category: selectedCategory?.id || undefined,
+        tag: selectedTag?.id || undefined,
+        userId,
+      };
+
+      Object.keys(params).forEach(
+        (k) => (params[k] === undefined || params[k] === null) && delete params[k]
+      );
+
+      const data = await filesAPI.search(params);
+      console.log(data, 'checking data');
+      setResults(data || []);
+    } catch (e) {
+      console.error('Search error', e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderItem = ({ item }: { item: IFile | Folder }) => {
     const isFile = 'path' in item;
@@ -95,7 +120,6 @@ const onSearch = async () => {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" backgroundColor="#FFFFFF" />
 
-      {/* Top search header */}
       <View style={styles.searchHeader}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <MaterialCommunityIcons name="arrow-left" size={24} color="#202124" />
@@ -117,13 +141,14 @@ const onSearch = async () => {
 
       {/* Filter chips row */}
       <View style={styles.filterRow}>
-        <FilterChip label="Tag" onPress={() => setActiveSheet('Tag')} />
+        <FilterChip
+          label={selectedTag ? selectedTag.label : 'Tag'}
+          onPress={() => setActiveSheet('Tag')}
+        />
         <FilterChip
           label={selectedCategory ? selectedCategory.label : 'Category'}
           onPress={() => setActiveSheet('Category')}
         />
-        {/* <FilterChip label="People" onPress={() => setActiveSheet('people')} />
-        <FilterChip label="Modified" onPress={() => setActiveSheet('modified')} /> */}
       </View>
 
       {/* Results */}
@@ -158,7 +183,20 @@ const onSearch = async () => {
         onClose={() => setActiveSheet(null)}
         onSelect={(option) => {
           setSelectedCategory(option);
-          // trigger search/filter here if you want live update
+          // optionally auto-search:
+          // onSearch();
+        }}
+      />
+
+      {/* Tag dropdown */}
+      <FilterBottomSheet
+        visible={activeSheet === 'Tag'}
+        title="Tag"
+        options={tagOptions}
+        onClose={() => setActiveSheet(null)}
+        onSelect={(option) => {
+          setSelectedTag(option);
+          // optionally auto-search:
           // onSearch();
         }}
       />

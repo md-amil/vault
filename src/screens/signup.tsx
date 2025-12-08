@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
+  Alert,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -14,28 +15,56 @@ import { CountryPicker } from 'react-native-country-codes-picker';
 import Spacer from '../components/Spacer';
 import GradientButton from '../components/GradientButton';
 import { colors, globalStyles } from '../style/global';
+import { authAPI } from '../api';
 
 export default function SignupScreen({ navigation }: { navigation: any }) {
   const [firstName, setFirstName] = useState<string>('');
   const [lastName, setLastName] = useState<string>('');
-  const [countryCode, setCountryCode] = useState<string>('+1');
+  const [countryCode, setCountryCode] = useState<string>('+91');
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   const isValid = useMemo(() => {
-    const nameOk = firstName.trim().length > 0 && lastName.trim().length > 0;
+    const nameOk = firstName.trim().length >0;
     const phoneOk = /^\d{6,15}$/.test(phone);
     const emailOk = /.+@.+\..+/.test(email);
     return nameOk && phoneOk && emailOk && !!countryCode;
   }, [firstName, lastName, phone, email, countryCode]);
 
-  function onSubmit() {
-    if (!isValid || loading) return;
+async function onSubmit() {
+  if (!isValid || loading) return;
 
-    // TODO: submit signup
+  try {
+    setLoading(true);
+
+    const payload = {
+     name:firstName.trim(),
+    mobile:`${countryCode}${phone}`,
+    email:email.trim()
+    };
+
+    console.log("Sending payload:", payload);
+
+    const data = await authAPI.register(payload); // axios call
+    console.log(data,'checking dta')
+
+    // Success
+    Alert.alert("Success", "Account created successfully!");
+    navigation.navigate("Login");
+    // navigation.navigate('OTP', { phone: phone.trim(), countryCode });
+
+  } catch (err: any) {
+    const message =
+      err?.response?.data?.message || "Something went wrong!";
+    Alert.alert("Error", message);
+  } finally {
+    setLoading(false);
   }
+}
+
+
 
   return (
     <KeyboardAvoidingView
