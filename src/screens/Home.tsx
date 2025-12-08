@@ -347,7 +347,7 @@ export default function HomeScreen({ navigation, route }: { navigation: any, rou
     }
     const folder = item as Folder;
     const folderCount = folder.children?.length || 0;
-    const fileCount = folder.files?.length || 0;
+    const fileCount = folder.fileCount || 0;
 
     if (folderCount > 0 && fileCount > 0) {
       return `${folderCount} Folder${folderCount > 1 ? 's' : ''}, ${fileCount} Document${fileCount > 1 ? 's' : ''}`;

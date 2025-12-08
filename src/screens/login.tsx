@@ -59,8 +59,11 @@ export default function LoginScreen({ navigation }: { navigation: any }) {
     try {
       setLoading(true);
       const fullPhoneNumber = `${countryCode}${phone}`;
+      // Send OTP to the phone number
       const response = await authAPI.sendOTP(fullPhoneNumber);
-      console.log(response, 'OTP response');
+      console.log(response, 'checking response');
+      Alert.alert("Success", "OTP has been sent to your mobile number. "+response?.otpCode, [{ text: "OK" }]);
+      // Navigate to OTP screen with phone number
       navigation.navigate('OTP', { phone: fullPhoneNumber, countryCode });
     } catch (error: any) {
       console.error('Login error:', error);

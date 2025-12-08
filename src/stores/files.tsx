@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Entry, File, Folder } from '../types';
+import { Folder } from '../types';
 import { filesAPI, foldersAPI } from "../api";
 import { Asset } from "react-native-image-picker";
 
