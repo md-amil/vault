@@ -32,7 +32,7 @@ export const authAPI = {
     const cleanMobile = mobile.replace(/\+/g, '').trim();
     const response = await api.post('/auth/send-otp', { mobile: cleanMobile });
     console.log(response,'checking resposne ns')
-    return
+    
     return response.data;
   },
 
